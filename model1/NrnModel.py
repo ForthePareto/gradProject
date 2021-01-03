@@ -65,26 +65,5 @@ class NrnModel():
         
         plt.show()
 
-    def measureInputResistance(self):
-        amp = -5
-        stim = self.setIClamp(delay=150,duration=100,amp=amp,segment=self.soma,position=0.5)
-        volt,t = self.recordVolt(self.soma,0.5)
-        self.runControler(TStop= 500,init = -65 )
-
-        restMembPot = max(list(volt)) # Should be -65 mv
-        minDepolarPot = min(list(volt))
-        inputResistance = abs((restMembPot - minDepolarPot)/amp) # should it always be positive  ??
-        # print(self.soma.psection())
-
-        print("-- Input Resistance Measurement --")
-        print(f'restMembPot: {restMembPot} mV')
-        print(f'minDepolarPot: {minDepolarPot} mV')
-        print(f'inputResistance: {inputResistance} (mV/nA)')
-        self.graphVolt(volt,t,label='soma(0.5)')
-        
-        return inputResistance
 
 
-
-nrn = NrnModel("5CompMy_temp.hoc")
-nrn.measureInputResistance()
