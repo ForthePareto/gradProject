@@ -1,7 +1,8 @@
 ## TO-DO 
 
-1. Clean up code
-2. Remove hard coded params and so on ...
+1. ~~Clean up code~~
+2. ~~Remove hard coded params and so on ...~~
+3. USE ISSUES AND PROJECT BOARDS INSTEAD OF 'TO-DO'
 
 
 ## Common commands
