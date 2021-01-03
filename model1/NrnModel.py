@@ -83,7 +83,7 @@ class NrnModel():
 
         print(f'restMembPot: {restMembPot} mV')
         print(f'minDepolarPot: {minDepolarPot} mV')
-        print(f'inputResistance: {inputResistance} (unit??)')
+        print(f'inputResistance: {inputResistance} (mV/nA)')
         
         return inputResistance
 

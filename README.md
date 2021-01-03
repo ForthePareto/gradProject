@@ -5,8 +5,9 @@ Optimization of neuron models using RL graduation project
 ## Meetings 
 1. meeting 1 : 16 Nov 2020 :<
 2. meeting 2 : 29 Dec 2020
-   1. [VID_0](https://www.mediafire.com/file/5o43znkeshcuvmg/zoom_0.mp4/file)
-   2. [VID_1](https://www.mediafire.com/file/ohbxlvqtxyoqoir/zoom_1.mp4/file)
+   - Discussed Input Resistance and time constant Measurement
+   - [VID_0](https://www.mediafire.com/file/5o43znkeshcuvmg/zoom_0.mp4/file)
+   - [VID_1](https://www.mediafire.com/file/ohbxlvqtxyoqoir/zoom_1.mp4/file)
 
 
 
