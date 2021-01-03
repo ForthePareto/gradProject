@@ -3,90 +3,88 @@ from neuron.units import ms, mV
 import matplotlib.pyplot as plt
 
 class NrnModel():
-    def __init__(self):
-        ## loading the cell
-        h.load_file("5CompMy_temp.hoc")    # with no h current
-        h.load_file('stdrun.hoc')
+    def __init__(self,cellTemplateFile):
 
-        # h('proc advance() {nrnpython("custom_advance()")}') 
         self.cell = None
         self.soma = None
 
-        self.stim = None
-        self.soma_v = None
-        self.t = None
-        
-        self.singleCellRun()
-        self.setStimulus()
-        self.record()
-        self.runControler()
+        self.singleCellRun(cellTemplateFile)
 
         # print(dir(self.cell))
         # print(dir(self.soma))
 
-        # print(self.soma.psection())
+        print('-- Model topology --')        
+        print(h.topology())
+
+
+    def singleCellRun(self,cellTemplateFile):
+        ## loading the cell
+        h.load_file(cellTemplateFile)    # with no h current
         
-        # print(h.topology())
-        self.measureInputResistance(-5)
-        self.plotResults()
-
-
-    def singleCellRun(self):
-    
         self.cell = h.fivecompMy()
         self.soma = self.cell.soma
+
+        # return cell,soma
     
 
-    # def custom_advance(self):
-    #     h.fadvance()
 
-    def setStimulus(self):
+    def setIClamp(self,delay,duration,amp,segment,position):
 
-        self.stim = h.IClamp(self.soma(0.5))  # add a current clamp the the middle of the soma
-        self.stim.delay = 150  # ms
-        self.stim.dur   = 100 # ms
-        self.stim.amp   = -5.0 # nA
+        stim = h.IClamp(segment(position))  # Add a current clamp at {position} of {segment}  
+        stim.delay = delay           # ms
+        stim.dur   = duration        # ms
+        stim.amp   = amp             # nA
+        return stim
         # print(self.soma.psection())
 
 
 
-    def record(self):
+    def recordVolt(self,segmentToRecord,position):
 
-        self.soma_v = h.Vector().record(self.soma(0.5)._ref_v)  # set up a recording vector and record voltage at the middle of the soma
+        segment_v = h.Vector().record(segmentToRecord(position)._ref_v)  # set up a recording vector and record voltage at {position} of {segment}
         
-        self.t = h.Vector().record(h._ref_t) #record time.
+        segment_t = h.Vector().record(h._ref_t) #record time.
+        return segment_v,segment_t
         
-        
-    def runControler(self):
-        # h.load_file('stdrun.hoc')
-        h.finitialize(-65 * mV)
-        h.continuerun(500 * ms)
+    def runControler(self,TStop,init=-65):
+        h.load_file('stdrun.hoc')
+        h.finitialize(init * mV)
+        h.continuerun(TStop * ms)
         # print(list(self.soma_v))
         
 
 
 
-    def plotResults(self):
+    def graphVolt(self,voltVector,tVector,label):
         plt.figure()
         # axes = plt.gca()
         # axes.set_ylim([-80,40]) 
-        plt.plot(self.t, self.soma_v,color='k',label='soma(0.5)')
+        plt.plot(tVector, voltVector,color='k',label=label)
         plt.xlabel('t (ms)')
         plt.ylabel('v (mV)')
         
         plt.show()
 
-    def measureInputResistance(self,ampExct):
-        restMembPot = max(list(self.soma_v)) # Should be -65 mv
-        minDepolarPot = min(list(self.soma_v))
-        inputResistance = abs((restMembPot - minDepolarPot)/ampExct) # should it always be positive  ??
+    def measureInputResistance(self):
+        amp = -5
+        stim = self.setIClamp(delay=150,duration=100,amp=amp,segment=self.soma,position=0.5)
+        volt,t = self.recordVolt(self.soma,0.5)
+        self.runControler(TStop= 500,init = -65 )
 
+        restMembPot = max(list(volt)) # Should be -65 mv
+        minDepolarPot = min(list(volt))
+        inputResistance = abs((restMembPot - minDepolarPot)/amp) # should it always be positive  ??
+        # print(self.soma.psection())
+
+        print("-- Input Resistance Measurement --")
         print(f'restMembPot: {restMembPot} mV')
         print(f'minDepolarPot: {minDepolarPot} mV')
         print(f'inputResistance: {inputResistance} (mV/nA)')
+        self.graphVolt(volt,t,label='soma(0.5)')
         
         return inputResistance
 
 
 
-nrn = NrnModel()
+nrn = NrnModel("5CompMy_temp.hoc")
+nrn.measureInputResistance()
