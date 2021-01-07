@@ -5,7 +5,7 @@ class FiveCompModel():
         
         self.model = NrnModel("5CompMy_temp.hoc")
     
-    def measureInputResistance(self):
+    def inputResistance(self):
         amp = -5
         stim = self.model.setIClamp(delay=150,duration=100,amp=amp,segment=self.model.soma,position=0.5)
         volt,t = self.model.recordVolt(self.model.soma,0.5)
@@ -24,8 +24,17 @@ class FiveCompModel():
         
         return inputResistance
 
+    def timeConstent(self,inputResistance):
+        capacitance = self.model.soma.psection()['cm'][0]
+        # print(capacitance)
+        tau = capacitance * inputResistance;
+        return tau
+
 
 if __name__=='__main__':
 
     modelRun = FiveCompModel()
-    modelRun.measureInputResistance()
+    inputRes = modelRun.inputResistance()
+    tau = modelRun.timeConstent(inputRes)
+
+    print(f'Tau: {tau}')
