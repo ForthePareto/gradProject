@@ -205,7 +205,7 @@ proc subsets() {
 
 proc parameters() {
 	celsius = 36			            // Temperature at which simulations are performed
-	v_init	= -70                		// mV, resting membrane potential
+	                		// mV, resting membrane potential
 }
 
 
