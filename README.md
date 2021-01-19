@@ -8,7 +8,11 @@ Optimization of neuron models using RL graduation project
    - Discussed Input Resistance and time constant Measurement
    - [VID_0](https://www.mediafire.com/file/5o43znkeshcuvmg/zoom_0.mp4/file)
    - [VID_1](https://www.mediafire.com/file/ohbxlvqtxyoqoir/zoom_1.mp4/file)
+3. meeting 3 : 08 Jan 2021
+   - Discussed ... FILL ME LATER
 
+## Recorded Meetings
+   - All recoded meetings are [HERE](https://www.mediafire.com/folder/pm73im0rhejr3/GP_meetings_2020)
 
 
 ## Books 
