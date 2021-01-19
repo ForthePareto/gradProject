@@ -62,8 +62,28 @@ class NrnModel():
         plt.plot(tVector, voltVector,color='k',label=label)
         plt.xlabel('t (ms)')
         plt.ylabel('v (mV)')
+        # plt.show()
         
-        plt.show()
+        return plt
 
+    def graphOverlap(self,v1,t1,color1,label1,alpha1,v2,t2,color2,label2,alpha2 ,title):
+        plt.figure()
+        plt.plot(t1, v1,color=color1,alpha=alpha1,label=label1)
+        plt.plot(t2, v2,color=color2,alpha=alpha2,label=label2)
+        plt.title(title)
+        plt.legend()
+        plt.xlabel('t (ms)')
+        plt.ylabel('v (mV)')
+        # plt.show()
+
+        return plt
+
+
+    def graphMarker(self,plt,markAtT,markAtVolt,label,markerShape='X'):
+
+        plt.plot(markAtT,markAtVolt,label=label,marker = markerShape)
+        plt.legend()
+        
+        # plt.show()
 
 

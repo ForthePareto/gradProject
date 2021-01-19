@@ -1,5 +1,5 @@
 from NrnModel import  NrnModel 
-
+import math
 class FiveCompModel():
     def __init__(self,):
         
@@ -38,18 +38,15 @@ class FiveCompModel():
         
         if EnablePlotting:
             #TODO: overlay plots , plot full graph and the sliced with diff color ,  and mark points on the graph
-             
-             # full spike
-            self.model.graphVolt(volt,t,label='soma(0.5)')
-             # sliced spike
-            self.model.graphVolt(slicedVolt,slicedT,label='soma(0.5)')
-        
+            # ::DONE::             
+            plt = self.model.graphOverlap(volt,t,'k','Full Spike',0.8,slicedVolt,slicedT,'g','Sliced spike',1.0,'input Resistance')
+            plt.show()
         return inputResistance
 
-    def avgInRes(self,sampleAmps):
+    def avgInRes(self,sampleAmps,EnablePlotting,EnablePrinting):
         print("----- Averaged Input Resistance  -----\n")
 
-        inputRes = [modelRun.inputResistance(amp,False,False) for amp in sampleAmps]
+        inputRes = [modelRun.inputResistance(amp,EnablePlotting,EnablePrinting) for amp in sampleAmps]
         avgInRes = sum(inputRes)/len(inputRes)
         print(f'inputRes List: \n{inputRes}\n')
         print(f'avgInRes: {avgInRes} (mV/nA)' )
@@ -57,16 +54,6 @@ class FiveCompModel():
 
         return avgInRes
 
-
-    # def sliceSpikeGraph(self,voltVec,tVec,startAtTime):
-    #     # find the volt point and it's respective time value
-    #     zipped = zip(voltVec,tVec)
-    #     slicedZipped = [(v,t) for v,t in zipped if t > startAtTime]
-    #     slicedUnZipped = zip(*slicedZipped)
-    #     slicedUnZipped = [pair for pair in slicedUnZipped]
-    #     slicedVolt = slicedUnZipped[0]
-    #     slicedTime = slicedUnZipped[1]
-    #     return slicedVolt,slicedTime
     
     def sliceSpikeGraph(self,voltVec,tVec,startAtTime,endAtTime):
         voltVec = list(voltVec)
@@ -84,36 +71,33 @@ class FiveCompModel():
     def timeConstant(self,amp):
         delay = 150
         duration = 100
-        volt,t = self.generateSpike(amp,duration = duration,delay = delay,stimSeg = self.model.soma,clampAt = 0.5,Tstop = 500)
-        slicedVolt,slicedTime = self.sliceSpikeGraph(volt,t,delay + duration - 50 ,delay + duration + 100)
+        volt , t  = self.generateSpike(amp,duration = duration,delay = delay,stimSeg = self.model.soma,clampAt = 0.5,Tstop = 500)
+        tStart  = delay + duration 
+        tEnd    = delay + duration + 100
         
+        slicedVolt,slicedTime = self.sliceSpikeGraph(volt,t,tStart,tEnd)
+
+        vStart =  slicedVolt[0]
+        vEnd =    slicedVolt[-1]
+        tC = -(tEnd - tStart)/ (math.log(vEnd/vStart))
         
-        # FUll spike
-        self.model.graphVolt(volt,t,label='soma(0.5)')
-        # sliced spike
-        self.model.graphVolt(slicedVolt,slicedTime,label='soma(0.5)')
+        plt = self.model.graphOverlap(volt,t,'k','Full Spike',0.8,slicedVolt,slicedTime,'g','Sliced spike',1.0,'Time Constant')
+        # self.model.graphMarker(plt,tStart,vStart,'start Point')
+        plt.show()
+        return tC
 
-
-    # def timeConstant(self,inputResistance):
-    #     print("----- time Constant Measurement -----")
-
-    #     capacitance = self.model.soma.psection()['cm'][0]
-    #     # print(capacitance)
-    #     tau = capacitance * inputResistance
-    #     print("----- ---------------------------- -----")
-
-    #     return tau
 
 
 if __name__=='__main__':
 
     modelRun = FiveCompModel()
     # modelRun.inputResistance(-0.5,True,True)
+
     testAmps = [-0.5,-0.6,-0.7,-0.8,-0.9,-1.0]
-    # modelRun.avgInRes(testAmps)
-    
-    
+    modelRun.avgInRes(testAmps,True,False)
     
     tau = modelRun.timeConstant(-0.5)
+    
+    
 
-    # print(f'Tau: {tau}')
+    print(f'Tau: {tau}')
