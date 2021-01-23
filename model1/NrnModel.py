@@ -15,8 +15,8 @@ class NrnModel():
         # print(dir(self.cell))
         # print(dir(self.soma))
 
-        print('-- Model topology --')
-        print(h.topology())
+        # print('-- Model topology --')
+        # print(h.topology())
 
     def singleCellRun(self, cellTemplateFile):
         # loading the cell

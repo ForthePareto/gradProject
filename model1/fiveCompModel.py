@@ -111,7 +111,41 @@ class FiveCompModel():
         plt.show()
         return tC
 
+    def APHeight(self,voltVec,timeVec,startsAt, duration):
+        """ measures the AP Height of the spike 
+
+                :param voltVec: recoreded vector of the spike voltage 
+                :param timeVec: recoreded vector of the spike time
+                :param startsAt: the time at which the cell is stimulated   
+                :param duration: the time for which the stimulation is continued
+            :return apHeight: the Height of the spike in milliVolts
+            :return apRest: the resting potential in milliVolts
+            :return apPeak: the peak potential in milliVolts
+
+        """
+        volt, time = self.sliceSpikeGraph(voltVec, timeVec, startsAt, startsAt + 10)
+        # get peak point
+        vPeak = max(volt)
+        indexPeak = volt.index(vPeak)
+        TPeak = time[indexPeak]
+        # get restng point 
+        vRest = volt[0]
+        indexVRest = volt.index(vRest)
+        tRest = time[indexVRest]
+        apHeight = abs(vPeak - vRest) 
+        print(f'apHeight: {apHeight} mV')
+        
+
+        plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
+                                      volt, time, 'g', 'AP Spike', 1.0, 'AP Height')
+
+        self.model.graphMarker(plt, TPeak, vPeak, 'AP Peak', 'x')
+        self.model.graphMarker(plt, tRest, vRest, 'AP Resting', 'x')
+        
+        return  apHeight , vRest , vPeak 
+
     def APWidth(self, voltVec, timeVec, startsAt, duration):
+        ## FIXME: matches aren't on both sides 
         """ measures the AP width of the spike 
 
                 :param voltVec: recoreded vector of the spike voltage 
@@ -122,38 +156,32 @@ class FiveCompModel():
 
         """
         # TODO: find the end of the spike with the interval function that will be done later
-        volt, time = self.sliceSpikeGraph(
-            voltVec, timeVec, startsAt, startsAt + 10)
-        # get peak point
-        vPeak = max(volt)
-        indexPeak = volt.index(vPeak)
-        TPeak = time[indexPeak]
-        # get restng point 
-        vRest = volt[0]
-        indexVRest = volt.index(vRest)
-        tRest = time[indexVRest]
+        volt, time = self.sliceSpikeGraph(voltVec, timeVec, startsAt, startsAt + 10)
+        apHeight , vRest , vPeak = self.APHeight(voltVec,timeVec,startsAt,duration)
         # calculate the mid point
         apHalfV = ((vPeak - vRest) / 2) + vRest
         print(f'apHalfV {apHalfV}')
 
         # find actual matches
-        matches =self.closeMatches(volt,apHalfV,0.8)
+        matches =self.closeMatches(volt,apHalfV,2.0)
         matches = list(zip(*matches))
         print(f'matches {matches}')
         vMatches = matches[0]
         indexMatches = matches[-1]
+        print(f'vMatches {vMatches}')
         
         m1 = vMatches[0]
         m2 = vMatches[-1]
         t1 = time[indexMatches[0]] 
         t2 = time[indexMatches[-1]] 
+        print(f'time {t1}')
+        print(f'time {t2}')
         
         apWidth = (t2 - t1)
         
-        plt = self.model.graphOverlap(
-            voltVec, timeVec, 'k', 'Full Spike', 0.8, volt, time, 'g', 'AP', 1.0, 'AP Width')
-        self.model.graphMarker(plt, TPeak, vPeak, 'AP Peak', 'x')
-        self.model.graphMarker(plt, tRest, vRest, 'AP Resting', 'x')
+        plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
+                                      volt, time, 'g', 'AP Spike', 1.0, 'AP Width')
+
         self.model.graphMarker(plt, t1, m1, 'AP half1', 'x')
         self.model.graphMarker(plt, t2, m2, 'AP half2', 'x')
 
@@ -170,9 +198,76 @@ class FiveCompModel():
                 :param tolerance:
             :return: list of (value,index) pairs 
         """
-        matches = [(val,index) for index,val in enumerate(lst) if (findVal - tolerance) < val < (findVal + tolerance)]
+        matches = [(val,index) for index,val in enumerate(lst) if ((findVal - tolerance) <= val) and (val <= (findVal + tolerance))]
 
         return matches
+
+
+    def detectSpikePattern(self,voltVec,timeVec,restingVolt,delay,duration,reverse=False):
+        """ Detects the up-down shape of the spike and extracts it
+            Args:
+                :param voltVec: recoreded vector of the spike voltage 
+                :param timeVec: recoreded vector of the spike time
+                :param delay: the time at which the stimulation is started
+                :param duration: the time for which the stimulation is continued
+            :return spikeVolt: list of the spike voltage values
+            :return spikeTime: list of the spike time values
+
+         """
+        volt,t = self.sliceSpikeGraph(voltVec,timeVec,delay,delay + duration + 70)
+        stillUp = True 
+        stillDown = True 
+        # if not(reverse):
+        spikeVolt = [volt[0]]
+        for v in volt:
+            title = "Spike Pattern"
+
+            if (v >= spikeVolt[-1]) and stillUp:
+                spikeVolt += [v]
+            elif (v < spikeVolt[-1]) and (v >= restingVolt) and stillDown:
+                stillUp = False
+                spikeVolt += [v]
+            else:
+                stillDown = False
+        if reverse:
+            stillDown = True
+            stillUp = False
+            spikeVolt = [spikeVolt[-1]]
+            title = "AHP Pattern"
+            for v in volt:
+                if (v < spikeVolt[-1]) and(v <= restingVolt) and stillDown:
+                    spikeVolt += [v]
+                    stillUp = True
+                elif (v > spikeVolt[-1]) and (v <= restingVolt) and stillUp:
+                    stillDown = False
+                    spikeVolt += [v]
+                else:
+                    stillUp = False
+        
+        
+        startIndex = volt.index(spikeVolt[0])
+        endIndex =  volt.index(spikeVolt[-1])
+        spikeTime = t[startIndex:endIndex + 1] 
+
+        # resize both list to match dimenstions
+        spikeVolt,spikeTime = self.matchSize(spikeVolt,spikeTime)
+
+        plt = modelRun.model.graphOverlap(voltVec, timeVec, 'k',"Full AP",0.2,
+                                        spikeVolt,spikeTime,'r',"Spike",1.0,title)
+        plt.show()
+    
+    
+        return spikeVolt,spikeTime
+
+    def matchSize(self,lst1,lst2):
+        # resize both list to match dimenstions
+        len1 = len(lst1)
+        len2 = len(lst2)
+        if len1 != len2:
+            minLen = min(len1,len2)
+            lst1 = lst1[:minLen] 
+            lst2= lst2[:minLen] 
+        return lst1,lst2
 
 
 if __name__ == '__main__':
@@ -184,8 +279,12 @@ if __name__ == '__main__':
     # modelRun.avgInRes(testAmps, True, False)
 
     # tau = modelRun.timeConstant(-0.5)
-    volt, t = modelRun.generateSpike(10, 6, 150, modelRun.iseg, 0.5, 500)
-    # plt = modelRun.model.graphVolt(volt, t, "AP")
+    volt, t = modelRun.generateSpike(12, 6, 150, modelRun.iseg, 0.5, 500)
+
+    # spikeV,spikeT = modelRun.detectSpikePattern(volt,t,-65,150,6,reverse=False)
+    # spikeV,spikeT = modelRun.detectSpikePattern(volt,t,-65,150,6,reverse=True)
+    # plt = modelRun.model.graphOverlap(volt, t, 'k',"Full AP",0.8,
+    #                                 spikeV,spikeT,'r',"Spike",1.0,"SPIKE Pattern")
     # plt.show()
     width = modelRun.APWidth(volt, t, 150, 5)
     # print(f'Tau: {tau} ms')
