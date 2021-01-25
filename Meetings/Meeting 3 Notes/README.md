@@ -12,12 +12,16 @@
    - affects the spike width
 
 ![AP](AP.png)
+
+
 1. AP Width (Measured Prop.)
    - Time from AP half-amplitude value in Depolarization, till the same value is reached in Repolarization phase   
 2. AP Height (Measured Prop.)
    - Difference betweent __AP-Start__ and __AP-Peak__ potentials
 
 ![AHP](AHP.png)
+
+
 5. AHP-Depth/AHP-Depth (Measured Prop.)
    - Diff. between Resting mem. pot. and min pot. in Hyper-rep. phase
 6. AHP-duration 

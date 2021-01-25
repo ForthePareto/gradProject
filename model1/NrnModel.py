@@ -1,7 +1,13 @@
 from neuron import h
 from neuron.units import ms, mV
 import matplotlib.pyplot as plt
+from enum import Enum
 
+class Level(Enum):
+    HIGH = 0.5 
+    MID  = 5.0
+    LOW  = 10.0
+    VLOW  = 50.0
 
 class NrnModel():
     def __init__(self, cellTemplateFile):
