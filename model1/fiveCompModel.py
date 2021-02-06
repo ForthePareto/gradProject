@@ -78,30 +78,6 @@ class FiveCompModel():
 
         return avgInRes
 
-    def sliceSpikeGraph(self, voltVec, tVec, startAtTime, endAtTime):
-        """ Slices the spike between two desired times
-
-                :param voltVec: recoreded vector of the spike voltage 
-                :param tVec: recoreded vector of the spike time
-                :param startAtTime: time in (ms) at which start the slice
-                :param endAtTime: time in (ms) at which end the slice
-            :return slicedVolt: (list) of the sliced spike's voltVec  
-            :return slicedTime: (list) of the sliced spike's tVec
-
-         """
-
-        voltVec = list(voltVec)
-        tVec = list(tVec)
-
-        slicedTime = [t for t in tVec if startAtTime <= t <= endAtTime]
-
-        startIndex = tVec.index(slicedTime[0])
-        endIndex = tVec.index(slicedTime[-1])
-
-        slicedVolt = voltVec[startIndex:endIndex + 1]
-
-        return slicedVolt, slicedTime
-
     def timeConstant(self, amp):
         delay = 150
         duration = 100
@@ -204,108 +180,6 @@ class FiveCompModel():
         print(f'apWidth: {apWidth} ms')
         return apWidth
 
-    def closeMatches(self, lst: list, findVal, tolerance):
-        # TODO: complete docs 
-        """ find a list of closest matches to a specific value with a spicified tolerance 
-            Args:
-                :param lst: 
-                :param findVal: 
-                :param tolerance:
-            :return: list of (value,index) pairs 
-        """
-        # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
-        matches = [(val,index) for index,val in enumerate(lst) if math.isclose(val,findVal,abs_tol=tolerance)]
-
-        return matches
-
-
-    def patternHighligher(self,voltVec,timeVec,delay,duration,restingVolt=-65,reverse=False):
-        """ Detects the up-down shape of the spike and extracts it
-            Args:
-                :param voltVec: recoreded vector of the spike voltage 
-                :param timeVec: recoreded vector of the spike time
-                :param delay: the time at which the stimulation is started
-                :param duration: the time for which the stimulation is continued
-            
-            :return spikeVolt: list of the spike voltage values
-            :return spikeTime: list of the spike time values
-            :return plt: matplotlib class member (graph handler,used to overlay on top old graphs)
-
-         """
-        volt,t = self.sliceSpikeGraph(voltVec,timeVec,delay,delay + duration + 70)
-        stillUp = True 
-        stillDown = True 
-        # if not(reverse):
-        spikeVolt = [volt[0]]
-        for v in volt:
-            title = "Spike Pattern"
-            label = "Spike"
-
-            if (v >= spikeVolt[-1]) and stillUp:
-                spikeVolt += [v]
-            elif (v < spikeVolt[-1]) and (v >= restingVolt) and stillDown:
-                stillUp = False
-                spikeVolt += [v]
-            else:
-                stillDown = False
-        if reverse:
-            stillDown = True
-            stillUp = False
-            spikeVolt = [spikeVolt[-1]]
-            title = "AHP Pattern"
-            label = "AHP"
-            for v in volt:
-                if (v < spikeVolt[-1]) and(v <= restingVolt) and stillDown:
-                    spikeVolt += [v]
-                    stillUp = True
-                elif (v > spikeVolt[-1]) and (v <= restingVolt) and stillUp:
-                    stillDown = False
-                    spikeVolt += [v]
-                else:
-                    stillUp = False
-        
-        
-        startIndex = volt.index(spikeVolt[0])
-        endIndex =  volt.index(spikeVolt[-1])
-        spikeTime = t[startIndex:endIndex + 1] 
-
-        # resize both list to match dimenstions
-        spikeVolt,spikeTime = self.matchSize(spikeVolt,spikeTime)
-
-        plt = modelRun.model.graphOverlap(voltVec, timeVec, 'k',"Full AP",0.2,
-                                        spikeVolt,spikeTime,'r',label,1.0,title)
-        # plt.show()
-    
-    
-        return spikeVolt,spikeTime,plt
-
-    def matchSize(self,lst1,lst2):
-        # resize both list to match dimenstions
-        len1 = len(lst1)
-        len2 = len(lst2)
-        if len1 != len2:
-            minLen = min(len1,len2)
-            lst1 = lst1[:minLen] 
-            lst2= lst2[:minLen] 
-        return lst1,lst2
-
-
-    def isSpike(self,voltVec,timeVec,delay,duration,accuracy:Level) -> bool: 
-        """ detect if there is a spike 
-        
-        Args:
-            :param voltVec: recoreded vector of the spike voltage 
-            :param timeVec: recoreded vector of the spike time
-            :param delay: the time at which the stimulation is started
-            :param duration: the time for which the stimulation is continued
-            :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
-            
-        :return bool: true if spike and false otherwise
-         """
-
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration)
-        plt.close()
-        return (abs(max(volt) - min(volt)) >= accuracy.value)
 
     def AHPDepth(self,voltVec,timeVec,delay,duration):
         """ Calculate the depth of the AHP phase in mV   
@@ -360,8 +234,6 @@ class FiveCompModel():
         plt.show()
         print(f'AHPDuration: {AHPDuration} mSecs')
         return AHPDuration
-
-
 
 
     def AHPHalfDuration(self,voltVec,timeVec,delay,duration):
@@ -501,34 +373,176 @@ class FiveCompModel():
         rheobase = end
         return rheobase
         
+########################################################################        
+##################         HELPER FUNCTIONS          ###################        
+########################################################################        
+
+
+    def sliceSpikeGraph(self, voltVec, tVec, startAtTime, endAtTime):
+        """ Slices the spike between two desired times
+
+                :param voltVec: recoreded vector of the spike voltage 
+                :param tVec: recoreded vector of the spike time
+                :param startAtTime: time in (ms) at which start the slice
+                :param endAtTime: time in (ms) at which end the slice
+            :return slicedVolt: (list) of the sliced spike's voltVec  
+            :return slicedTime: (list) of the sliced spike's tVec
+
+         """
+
+        voltVec = list(voltVec)
+        tVec = list(tVec)
+
+        slicedTime = [t for t in tVec if startAtTime <= t <= endAtTime]
+
+        startIndex = tVec.index(slicedTime[0])
+        endIndex = tVec.index(slicedTime[-1])
+
+        slicedVolt = voltVec[startIndex:endIndex + 1]
+
+        return slicedVolt, slicedTime
+
+
+    def closeMatches(self, lst: list, findVal, tolerance):
+        # TODO: complete docs 
+        """ find a list of closest matches to a specific value with a spicified tolerance 
+            Args:
+                :param lst: 
+                :param findVal: 
+                :param tolerance:
+            :return: list of (value,index) pairs 
+        """
+        # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
+        matches = [(val,index) for index,val in enumerate(lst) if math.isclose(val,findVal,abs_tol=tolerance)]
+
+        return matches
+
+
+    def patternHighligher(self,voltVec,timeVec,delay,duration,restingVolt=-65,reverse=False):
+        """ Detects the up-down shape of the spike and extracts it
+            Args:
+                :param voltVec: recoreded vector of the spike voltage 
+                :param timeVec: recoreded vector of the spike time
+                :param delay: the time at which the stimulation is started
+                :param duration: the time for which the stimulation is continued
+            
+            :return spikeVolt: list of the spike voltage values
+            :return spikeTime: list of the spike time values
+            :return plt: matplotlib class member (graph handler,used to overlay on top old graphs)
+
+         """
+        volt,t = self.sliceSpikeGraph(voltVec,timeVec,delay,delay + duration + 70)
+        stillUp = True 
+        stillDown = True 
+        # if not(reverse):
+        spikeVolt = [volt[0]]
+        for v in volt:
+            title = "Spike Pattern"
+            label = "Spike"
+
+            if (v >= spikeVolt[-1]) and stillUp:
+                spikeVolt += [v]
+            elif (v < spikeVolt[-1]) and (v >= restingVolt) and stillDown:
+                stillUp = False
+                spikeVolt += [v]
+            else:
+                stillDown = False
+        if reverse:
+            stillDown = True
+            stillUp = False
+            spikeVolt = [spikeVolt[-1]]
+            title = "AHP Pattern"
+            label = "AHP"
+            for v in volt:
+                if (v < spikeVolt[-1]) and(v <= restingVolt) and stillDown:
+                    spikeVolt += [v]
+                    stillUp = True
+                elif (v > spikeVolt[-1]) and (v <= restingVolt) and stillUp:
+                    stillDown = False
+                    spikeVolt += [v]
+                else:
+                    stillUp = False
         
+        
+        startIndex = volt.index(spikeVolt[0])
+        endIndex =  volt.index(spikeVolt[-1])
+        spikeTime = t[startIndex:endIndex + 1] 
+
+        # resize both list to match dimenstions
+        spikeVolt,spikeTime = self.matchSize(spikeVolt,spikeTime)
+
+        plt = self.model.graphOverlap(voltVec, timeVec, 'k',"Full AP",0.2,
+                                        spikeVolt,spikeTime,'r',label,1.0,title)
+        # plt.show()
+    
+    
+        return spikeVolt,spikeTime,plt
+
+    def matchSize(self,lst1,lst2):
+        # resize both list to match dimenstions
+        len1 = len(lst1)
+        len2 = len(lst2)
+        if len1 != len2:
+            minLen = min(len1,len2)
+            lst1 = lst1[:minLen] 
+            lst2= lst2[:minLen] 
+        return lst1,lst2
+
+
+    def isSpike(self,voltVec,timeVec,delay,duration,accuracy:Level) -> bool: 
+        """ detect if there is a spike 
+        
+        Args:
+            :param voltVec: recoreded vector of the spike voltage 
+            :param timeVec: recoreded vector of the spike time
+            :param delay: the time at which the stimulation is started
+            :param duration: the time for which the stimulation is continued
+            :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
+            
+        :return bool: true if spike and false otherwise
+         """
+
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration)
+        plt.close()
+        return (abs(max(volt) - min(volt)) >= accuracy.value)
+
+
+
+########################################################################        
+########################################################################        
+
 
 if __name__ == '__main__':
 
-    modelRun = FiveCompModel()
-    # modelRun.inputResistance(-0.5,True,True)
+    def testRun():
+        modelRun = FiveCompModel()
+        modelRun.inputResistance(-0.5,True,True)
 
-    testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
-    # modelRun.avgInRes(testAmps, True, False)
+        # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
+        # modelRun.avgInRes(testAmps, True, False)
+        tau = modelRun.timeConstant(-0.5)
 
-    # tau = modelRun.timeConstant(-0.5)
-    delay = 150
-    duration = 6
-    current = 12
-    volt, t = modelRun.stimulateCell(current, duration, delay, modelRun.iseg, 0.5, 500)
-    # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
-    # print(f'Is Spike: {res}')
-    # modelRun.AHPDepth(volt,t,delay,duration)
-    # modelRun.AHPDuration(volt,t,delay,duration)
-    # modelRun.AHPHalfDuration(volt,t,delay,duration)
-    # modelRun.AHPHalfDecay(volt,t,delay,duration)
-    # modelRun.AHPRisingTime(volt,t,delay,duration)
-    modelRun.Rheobase(Level.VLOW,3)
-    # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=False)
-    # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=True)
-    # print(spikeV)
-    # plt = modelRun.model.graphOverlap(volt, t, 'k',"Full AP",0.8,
-    #                                 spikeV,spikeT,'r',"Spike",1.0,"SPIKE Pattern")
-    # plt.show()
-    # width = modelRun.APWidth(volt, t, 150, 5)
-    # print(f'Tau: {tau} ms')
+        delay = 150
+        duration = 6
+        current = 12
+        volt, t = modelRun.stimulateCell(current, duration, delay, modelRun.iseg, 0.5, 500)
+        # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
+        # print(f'Is Spike: {res}')
+        modelRun.APHeight(volt,t,delay,duration)
+        modelRun.APWidth(volt,t,delay,duration)
+        modelRun.AHPDepth(volt,t,delay,duration)
+        modelRun.AHPDuration(volt,t,delay,duration)
+        modelRun.AHPHalfDuration(volt,t,delay,duration)
+        modelRun.AHPHalfDecay(volt,t,delay,duration)
+        modelRun.AHPRisingTime(volt,t,delay,duration)
+        modelRun.Rheobase(Level.VLOW,3)
+        # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=False)
+        # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=True)
+        # print(spikeV)
+        # plt = modelRun.model.graphOverlap(volt, t, 'k',"Full AP",0.8,
+        #                                 spikeV,spikeT,'r',"Spike",1.0,"SPIKE Pattern")
+        # plt.show()
+        # width = modelRun.APWidth(volt, t, 150, 5)
+        # print(f'Tau: {tau} ms')
+
+    testRun()
