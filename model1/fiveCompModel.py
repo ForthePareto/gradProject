@@ -2,14 +2,20 @@ from NrnModel import NrnModel ,Level
 import math
 from numpy import arange
 
-
-
+from xlwt import Workbook 
+  
 class FiveCompModel():
     def __init__(self,):
 
         self.model = NrnModel("5CompMy_temp.hoc")
         self.soma = self.model.soma
         self.iseg = self.model.iseg
+        # self.xlSheet = None
+        # self.row = None
+        # self.col = None
+        # self.xlSheetInit()
+    
+
 
     def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
         """ Stimulate the cell at the desired properties
@@ -33,6 +39,15 @@ class FiveCompModel():
         return volt, t
 
     def inputResistance(self, amp, EnablePlotting, EnablePrinting):
+        """ Measures the input resistance 
+            Args:
+                :param amp: current amplitude used to stimulate the cell
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+            :return inputResistance: input Resistance
+                
+
+        """
         delay = 150
         duration = 100
         volt, t = self.stimulateCell(
@@ -57,6 +72,9 @@ class FiveCompModel():
             print(f'minDepolarPot: {minDepolarPot} mV')
             print(f'inputResistance: {inputResistance} (mV/nA)')
             print("----- ---------------------------- -----")
+            # self.xlSheet.write(1,0,"Input Resistance")
+            # self.xlSheetWriteRows("Input Resistance")
+            # self.xlSheetWriteCols(inputResistance)
 
         if EnablePlotting:
             # TODO: overlay plots , plot full graph and the sliced with diff color ,  and mark points on the graph
@@ -67,18 +85,35 @@ class FiveCompModel():
         return inputResistance
 
     def avgInRes(self, sampleAmps, EnablePlotting, EnablePrinting):
-        print("----- Averaged Input Resistance  -----\n")
+        """ Measures the average input resistance over many samples
+            Args:
+                :param sampleAmps: List of current amplitudes used to stimulate the cell
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+            :return avgInRes: average input Resistance
+                
 
-        inputRes = [modelRun.inputResistance(
-            amp, EnablePlotting, EnablePrinting) for amp in sampleAmps]
+        """
+        inputRes = [self.inputResistance(amp, EnablePlotting, EnablePrinting) for amp in sampleAmps]
         avgInRes = sum(inputRes)/len(inputRes)
-        print(f'inputRes List: \n{inputRes}\n')
-        print(f'avgInRes: {avgInRes} (mV/nA)')
-        print("----- ---------------------------- -----\n")
+        
+        if EnablePrinting:
+            print("----- Averaged Input Resistance  -----\n")
+            # print(f'inputRes List: \n{inputRes}\n')
+            print(f'avgInRes: {avgInRes} (mV/nA)')
+            print("----- ---------------------------- -----\n")
 
         return avgInRes
 
-    def timeConstant(self, amp):
+    def timeConstant(self, amp,EnablePlotting, EnablePrinting):
+        """ Measures the time constant 
+            Args:
+                :param amp: List of current amplitudes used to stimulate the cell
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+            
+            :return tC: time constant
+        """
         delay = 150
         duration = 100
         volt, t = self.stimulateCell(
@@ -91,27 +126,35 @@ class FiveCompModel():
 
         vStart = slicedVolt[0]
         vEnd = slicedVolt[-1]
-        # print(f'vStart: {vStart}')
-        # print(f'vEnd: {vEnd}')
-        # print(f'tStart: {tStart}')
-        # print(f'tEnd: {tEnd}')
         tC = -(tEnd - tStart) / math.log(1 - (vEnd/vStart))
-
-        plt = self.model.graphOverlap(
-            volt, t, 'k', 'Full Spike', 0.8, slicedVolt, slicedTime, 'g', 'Sliced spike', 1.0, 'Time Constant')
-        # self.model.graphMarker(plt,tStart,vStart,'start Point')
-        plt.show()
+        
+        if EnablePrinting:
+            print(f'Time Constant: {tC}')
+            # print(f'vStart: {vStart}')
+            # print(f'vEnd: {vEnd}')
+            # print(f'tStart: {tStart}')
+            # print(f'tEnd: {tEnd}')
+        if EnablePlotting:
+            plt = self.model.graphOverlap(volt, t, 'k', 'Full Spike', 0.8,
+                                         slicedVolt, slicedTime, 'g', 'Sliced spike', 1.0, 'Time Constant')
+            # self.model.graphMarker(plt,tStart,vStart,'start Point')
+            plt.show()
         return tC
 
-    def APHeight(self,voltVec,timeVec,delay, duration):
+    def APHeight(self,voltVec,timeVec,delay, duration,EnablePlotting,EnablePrinting):
         """ measures the AP Height of the spike 
-
+            Args:
                 :param voltVec: recoreded vector of the spike voltage 
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the cell is stimulated   
                 :param duration: the time for which the stimulation is continued
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+            
             :return apHeight: the Height of the spike in milliVolts
+            
             :return apRest: the resting potential in milliVolts
+            
             :return apPeak: the peak potential in milliVolts
 
         """
@@ -124,19 +167,21 @@ class FiveCompModel():
         vRest = volt[0]
         indexVRest = volt.index(vRest)
         tRest = time[indexVRest]
-        apHeight = abs(vPeak - vRest) 
-        print(f'apHeight: {apHeight} mV')
+        apHeight = abs(vPeak - vRest)
         
+        if EnablePrinting: 
+            print(f'apHeight: {apHeight} mV')
 
-        plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
-                                      volt, time, 'g', 'AP Spike', 1.0, 'AP Height')
+        if EnablePlotting:
+            plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
+                                        volt, time, 'g', 'AP Spike', 1.0, 'AP Height')
 
-        self.model.graphMarker(plt, TPeak, vPeak, 'AP Peak', 'x')
-        self.model.graphMarker(plt, tRest, vRest, 'AP Resting', 'x')
+            self.model.graphMarker(plt, TPeak, vPeak, 'AP Peak', 'x')
+            self.model.graphMarker(plt, tRest, vRest, 'AP Resting', 'x')
         
         return  apHeight , vRest , vPeak 
 
-    def APWidth(self, voltVec, timeVec, delay, duration):
+    def APWidth(self, voltVec, timeVec, delay, duration,EnablePlotting,EnablePrinting):
         ## FIXME: matches aren't aon the same level , but close enough ... (works for me) 
         """ measures the AP width of the spike 
 
@@ -144,17 +189,19 @@ class FiveCompModel():
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the cell is stimulated   
                 :param duration: the time for which the stimulation is continued
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+            
             :return : the width of the spike in milliSecs
 
         """
         # TODO: find the end of the spike with the interval function that will be done later
         # volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
-        volt , time ,plt= self.patternHighligher(voltVec,timeVec,delay,duration)
-        apHeight , vRest , vPeak = self.APHeight(voltVec,timeVec,delay,duration)
+        volt , time ,plt= self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting)
+        apHeight , vRest , vPeak = self.APHeight(voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting)
         # calculate the mid point
-        print(f'vRest {vRest} mV')
         apHalfV = (apHeight / 2) + vRest
-        print(f'apHalfV {apHalfV} mV')
+        
 
         # find actual matches
         matches =self.closeMatches(volt,apHalfV,4.5)
@@ -169,19 +216,22 @@ class FiveCompModel():
         t2 = time[indexMatches[-1]] 
         
         apWidth = (t2 - t1)
-        
-        plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
-                                      volt, time, 'g', 'AP Spike', 1.0, 'AP Width')
+        if EnablePlotting: 
+            plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
+                                        volt, time, 'g', 'AP Spike', 1.0, 'AP Width')
 
-        self.model.graphMarker(plt, t1, m1, 'AP half1', 'x')
-        self.model.graphMarker(plt, t2, m2, 'AP half2', 'x')
+            self.model.graphMarker(plt, t1, m1, 'AP half1', 'x')
+            self.model.graphMarker(plt, t2, m2, 'AP half2', 'x')
 
-        plt.show()
-        print(f'apWidth: {apWidth} ms')
+            plt.show()
+        if EnablePrinting:
+            print(f'vRest {vRest} mV')
+            print(f'apHalfV {apHalfV} mV')
+            print(f'apWidth: {apWidth} ms')
         return apWidth
 
 
-    def AHPDepth(self,voltVec,timeVec,delay,duration):
+    def AHPDepth(self,voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting):
         """ Calculate the depth of the AHP phase in mV   
         
         Args:
@@ -189,26 +239,32 @@ class FiveCompModel():
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
+            :param EnablePlotting: Boolean used to toggle plotting on and off
+            :param EnablePrinting: Boolean used to toggle printing on and off
+            
         
         :return AHPDepth:depth of the AHP phase in mV
         
         """
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,reverse=True)
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting,reverse=True)
         AHPStartV = volt[0]          
         AHPPeakV = min(volt)
         AHPStartT = t[0]          
         AHPPeakT = t[volt.index(AHPPeakV)]
         AHPDepthV = abs(AHPPeakV - AHPStartV)
-        self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP PEAK',markerShape='x')
-        self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
         
-        plt.title('AHP Depth')
-        plt.show()
-        print(f'AHPDepthV :{AHPDepthV} mV')
+        if EnablePlotting:
+            self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP PEAK',markerShape='x')
+            self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
+            
+            plt.title('AHP Depth')
+            plt.show()
+        if EnablePrinting:
+            print(f'AHPDepthV :{AHPDepthV} mV')
         return AHPDepthV
 
 
-    def AHPDuration(self,voltVec,timeVec,delay,duration):
+    def AHPDuration(self,voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting):
         """ Calculate the duration of the AHP phase in mSec   
         
         Args:
@@ -216,10 +272,12 @@ class FiveCompModel():
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
+            :param EnablePlotting: Boolean used to toggle plotting on and off
+            :param EnablePrinting: Boolean used to toggle printing on and off
         
         :return AHPDuration:duration of the AHP phase in mSec
         """
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,reverse=True)
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting,reverse=True)
 
         AHPStartV = volt[0]          
         AHPStartT = t[0]          
@@ -227,16 +285,19 @@ class FiveCompModel():
         AHPEndV = volt[-1]        
         AHPEndT = t[-1]
         AHPDuration = AHPEndT - AHPStartT 
-        self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
-        self.model.graphMarker(plt,AHPEndT,AHPEndV,'AHP End',markerShape='x')
         
-        plt.title('AHP Duration')
-        plt.show()
-        print(f'AHPDuration: {AHPDuration} mSecs')
+        if EnablePlotting:
+            self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
+            self.model.graphMarker(plt,AHPEndT,AHPEndV,'AHP End',markerShape='x')
+            
+            plt.title('AHP Duration')
+            plt.show()
+        if EnablePrinting:
+            print(f'AHPDuration: {AHPDuration} mSecs')
         return AHPDuration
 
 
-    def AHPHalfDuration(self,voltVec,timeVec,delay,duration):
+    def AHPHalfDuration(self,voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting):
         """ Calculate the half-duration of the AHP phase in mSec   
         
         Args:
@@ -244,10 +305,12 @@ class FiveCompModel():
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
+            :param EnablePlotting: Boolean used to toggle plotting on and off
+            :param EnablePrinting: Boolean used to toggle printing on and off
         
         :return AHPHalfDuration:half duration of the AHP phase in mSec
         """
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,reverse=True)
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting,reverse=True)
 
         AHPStartV = volt[0]          
         AHPPeakV = min(volt)
@@ -255,11 +318,12 @@ class FiveCompModel():
         # print(f'AHPStartV :{AHPStartV}')
 
         AHPHalfV = ((AHPPeakV - AHPStartV) / 2) + AHPStartV 
-        print(f'AHPHalfV :{AHPHalfV}')
         # find close matches to the exact value of {AHPHalfV}
         matches = self.closeMatches(volt,AHPHalfV,0.005)
         matches = list(zip(*matches))
-        print(f'matches {matches}')
+        if EnablePrinting:
+            print(f'AHPHalfV :{AHPHalfV}')
+            print(f'matches {matches}')
         matchesV,matchesT = matches
         # left point
         v1 = matchesV[0]
@@ -271,14 +335,16 @@ class FiveCompModel():
 
             
         AHPHalfDuration = t2 - t1 
-        self.model.graphMarker(plt,t1,v1,'AHP half-left',markerShape='x')
-        self.model.graphMarker(plt,t2,v2,'AHP half.right',markerShape='x')
-        plt.show()
-        print(f'AHPHalfDuration: {AHPHalfDuration} mSecs')
+        if EnablePlotting:
+            self.model.graphMarker(plt,t1,v1,'AHP half-left',markerShape='x')
+            self.model.graphMarker(plt,t2,v2,'AHP half.right',markerShape='x')
+            plt.show()
+        if EnablePrinting:
+            print(f'AHPHalfDuration: {AHPHalfDuration} mSecs')
         return AHPHalfDuration
 
 
-    def AHPHalfDecay(self,voltVec,timeVec,delay,duration):
+    def AHPHalfDecay(self,voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting):
         """ Calculate the half-decay of the AHP phase in mSec   
         
         Args:
@@ -286,10 +352,12 @@ class FiveCompModel():
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
+            :param EnablePlotting: Boolean used to toggle plotting on and off
+            :param EnablePrinting: Boolean used to toggle printing on and off
         
         :return AHPHalfDecay:half decay of the AHP phase in mSec
         """        
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,reverse=True)
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting,reverse=True)
 
         AHPStartV = volt[0]          
         AHPPeakV = min(volt)
@@ -309,16 +377,18 @@ class FiveCompModel():
         AHPHalfTLeft = t[matchesT[-1]]
 
         AHPHalfDecay = AHPHalfTLeft - AHPPeakT
-        self.model.graphMarker(plt,AHPHalfTLeft,AHPHalfVLeft,'AHP half-left',markerShape='x')
-        self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP Peak',markerShape='x')
-        
-        plt.title('AHP Half-Decay')
-        plt.show()
-        print(f'AHPHalfDecay: {AHPHalfDecay} mSecs')
+        if EnablePlotting:
+            self.model.graphMarker(plt,AHPHalfTLeft,AHPHalfVLeft,'AHP half-left',markerShape='x')
+            self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP Peak',markerShape='x')
+            
+            plt.title('AHP Half-Decay')
+            plt.show()
+        if EnablePrinting:
+            print(f'AHPHalfDecay: {AHPHalfDecay} mSecs')
         return AHPHalfDecay
 
 
-    def AHPRisingTime(self,voltVec,timeVec,delay,duration):
+    def AHPRisingTime(self,voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting):
         """ Calculate the Rising Time of the AHP phase in mSec   
         
             Args:
@@ -326,10 +396,12 @@ class FiveCompModel():
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the stimulation is started
                 :param duration: the time for which the stimulation is continued
-            
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
+        
             :return AHPRisingTime: Rising Time of the AHP phase in mSec
         """
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,reverse=True)
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting,reverse=True)
         
         AHPStartV = volt[0]          
         AHPStartT = t[0]          
@@ -338,20 +410,24 @@ class FiveCompModel():
         AHPPeakT = t[volt.index(AHPPeakV)]
         
         AHPRisingTime = AHPPeakT - AHPStartT
-        self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP PEAK',markerShape='x')
-        self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
-        plt.title('AHP-Rising Time')
-        plt.show()
-        print(f'AHPRisingTime :{AHPRisingTime} mV')
+        if EnablePlotting:
+            self.model.graphMarker(plt,AHPPeakT,AHPPeakV,'AHP PEAK',markerShape='x')
+            self.model.graphMarker(plt,AHPStartT,AHPStartV,'AHP Start',markerShape='x')
+            plt.title('AHP-Rising Time')
+            plt.show()
+        if EnablePrinting:
+            print(f'AHPRisingTime :{AHPRisingTime} mV')
         return AHPRisingTime
 
-    def Rheobase(self,accuracy,refineTimes:int,duration=50,delay=150):
+    def Rheobase(self,accuracy,refineTimes:int,EnablePlotting,EnablePrinting,duration=50,delay=150):
         """ Calculate Rheobase current of the cell in nA
             Args:
                 :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
                 :param refineTimes: number of repeation, the higher, the more accurate the Rheobase     
-                :param delay: the time at which the stimulation is started 
+                :param EnablePlotting: Boolean used to toggle printing on and off
+                :param EnablePrinting: Boolean used to toggle printing on and off
                 :param duration: the time for which the stimulation is continued (should be +50 ms)
+                :param delay: the time at which the stimulation is started 
         
             :return rheobase: Calculate Rheobase current of the cell in nA
         """
@@ -362,15 +438,20 @@ class FiveCompModel():
 
             for current in arange(start,end,step):
                 volt,t = self.stimulateCell(current,duration,delay,self.soma,0.5,500)
-                if self.isSpike(volt,t,delay,duration,accuracy):
+                if self.isSpike(volt,t,delay,duration,EnablePlotting,accuracy):
+
                     start = current - step
                     end = current 
-                    print(f'current: {current}')
+                    if EnablePrinting:
+                        print(f'in Range [{start},{end}] ')
+                        print(f'at current: {current}')
                     step = step / 10
                     break
                     
             refineTimes -= 1
         rheobase = end
+        if EnablePrinting:
+            print(f'rheobase {rheobase}')
         return rheobase
         
 ########################################################################        
@@ -385,6 +466,8 @@ class FiveCompModel():
                 :param tVec: recoreded vector of the spike time
                 :param startAtTime: time in (ms) at which start the slice
                 :param endAtTime: time in (ms) at which end the slice
+
+
             :return slicedVolt: (list) of the sliced spike's voltVec  
             :return slicedTime: (list) of the sliced spike's tVec
 
@@ -404,12 +487,11 @@ class FiveCompModel():
 
 
     def closeMatches(self, lst: list, findVal, tolerance):
-        # TODO: complete docs 
         """ find a list of closest matches to a specific value with a spicified tolerance 
             Args:
-                :param lst: 
-                :param findVal: 
-                :param tolerance:
+                :param lst: target list to search into
+                :param findVal: target value
+                :param tolerance: accepted error in matches
             :return: list of (value,index) pairs 
         """
         # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
@@ -418,14 +500,17 @@ class FiveCompModel():
         return matches
 
 
-    def patternHighligher(self,voltVec,timeVec,delay,duration,restingVolt=-65,reverse=False):
+    def patternHighligher(self,voltVec,timeVec,delay,duration,EnablePlotting,restingVolt=-65,reverse=False):
         """ Detects the up-down shape of the spike and extracts it
             Args:
                 :param voltVec: recoreded vector of the spike voltage 
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the stimulation is started
                 :param duration: the time for which the stimulation is continued
-            
+                :param EnablePlotting: Boolean used to toggle plotting on and off
+        
+
+
             :return spikeVolt: list of the spike voltage values
             :return spikeTime: list of the spike time values
             :return plt: matplotlib class member (graph handler,used to overlay on top old graphs)
@@ -470,10 +555,11 @@ class FiveCompModel():
 
         # resize both list to match dimenstions
         spikeVolt,spikeTime = self.matchSize(spikeVolt,spikeTime)
-
-        plt = self.model.graphOverlap(voltVec, timeVec, 'k',"Full AP",0.2,
+        plt = None
+        if EnablePlotting:
+            plt = self.model.graphOverlap(voltVec, timeVec, 'k',"Full AP",0.2,
                                         spikeVolt,spikeTime,'r',label,1.0,title)
-        # plt.show()
+            # plt.show()
     
     
         return spikeVolt,spikeTime,plt
@@ -489,7 +575,9 @@ class FiveCompModel():
         return lst1,lst2
 
 
-    def isSpike(self,voltVec,timeVec,delay,duration,accuracy:Level) -> bool: 
+
+
+    def isSpike(self,voltVec,timeVec,delay,duration,EnablePlotting,accuracy:Level) -> bool: 
         """ detect if there is a spike 
         
         Args:
@@ -498,13 +586,15 @@ class FiveCompModel():
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
             :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
-            
+            :param EnablePlotting: Boolean used to toggle plotting on and off
+        
         :return bool: true if spike and false otherwise
          """
-
-        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration)
-        plt.close()
+        volt,t,plt = self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting)
+        if EnablePlotting:
+            plt.close()
         return (abs(max(volt) - min(volt)) >= accuracy.value)
+
 
 
 
@@ -514,13 +604,44 @@ class FiveCompModel():
 
 if __name__ == '__main__':
 
-    def testRun():
-        modelRun = FiveCompModel()
-        modelRun.inputResistance(-0.5,True,True)
+    def xlSheetInit():
+        """ Initializes the exel sheet to write into """
+        col = 1
+        row = 1
+        # Workbook is created 
+        wb = Workbook() 
+        # add_sheet is used to create sheet. 
+        xlSheet = wb.add_sheet('Feature Measurments') 
+        return xlSheet,wb ,row , col
 
-        # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
-        # modelRun.avgInRes(testAmps, True, False)
-        tau = modelRun.timeConstant(-0.5)
+    def xlSheetWriteCols(xlSheet,row,col,item):
+        
+        xlSheet.write(row-1,1,item)
+        return col
+
+    def xlSheetWriteRows(xlSheet,row,col,item):
+        xlSheet.write(row,0,item)
+        return (row+1)
+
+
+    def testRun(EnablePlotting:bool,EnablePrinting:bool):
+        xlSheet,wb,row , col = xlSheetInit()
+        modelRun = FiveCompModel()
+        
+        rIn = modelRun.inputResistance(-0.5,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"input Resistance")
+        col = xlSheetWriteCols(xlSheet,row,col,round(rIn,2))
+
+        testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
+        avgRin = modelRun.avgInRes(testAmps,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"Average input Resistance")
+        col = xlSheetWriteCols(xlSheet,row,col,round(avgRin,2))
+
+
+        tau = modelRun.timeConstant(-0.5,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"time Constant")
+        col = xlSheetWriteCols(xlSheet,row,col,round(tau,2))
+
 
         delay = 150
         duration = 6
@@ -528,14 +649,41 @@ if __name__ == '__main__':
         volt, t = modelRun.stimulateCell(current, duration, delay, modelRun.iseg, 0.5, 500)
         # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
         # print(f'Is Spike: {res}')
-        modelRun.APHeight(volt,t,delay,duration)
-        modelRun.APWidth(volt,t,delay,duration)
-        modelRun.AHPDepth(volt,t,delay,duration)
-        modelRun.AHPDuration(volt,t,delay,duration)
-        modelRun.AHPHalfDuration(volt,t,delay,duration)
-        modelRun.AHPHalfDecay(volt,t,delay,duration)
-        modelRun.AHPRisingTime(volt,t,delay,duration)
-        modelRun.Rheobase(Level.VLOW,3)
+        APHeight,rest,peak = modelRun.APHeight(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AP Height")
+        col = xlSheetWriteCols(xlSheet,row,col,round(APHeight,2))
+
+        APWidth = modelRun.APWidth(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AP Width")
+        col = xlSheetWriteCols(xlSheet,row,col,round(APWidth,2))
+
+        AHPDepth = modelRun.AHPDepth(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Depth")
+        col = xlSheetWriteCols(xlSheet,row,col,round(AHPDepth,2))
+
+        AHPDuration = modelRun.AHPDuration(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Duration")
+        col = xlSheetWriteCols(xlSheet,row,col,round(AHPDuration,2))
+
+        AHPHalfDuration = modelRun.AHPHalfDuration(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Duration")
+        col = xlSheetWriteCols(xlSheet,row,col,round(AHPHalfDuration,2))
+
+
+        AHPHalfDecay = modelRun.AHPHalfDecay(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Decay")
+        col = xlSheetWriteCols(xlSheet,row,col,round(AHPHalfDecay,2))
+
+
+        AHPRisingTime = modelRun.AHPRisingTime(volt,t,delay,duration,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Rising-Time")
+        col = xlSheetWriteCols(xlSheet,row,col,round(AHPRisingTime,2))
+
+        Rheobase = modelRun.Rheobase(Level.VLOW,3,EnablePlotting,EnablePrinting)
+        row = xlSheetWriteRows(xlSheet,row,col,"Rheobase")
+        col = xlSheetWriteCols(xlSheet,row,col,round(Rheobase,2))
+
+
         # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=False)
         # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=True)
         # print(spikeV)
@@ -545,4 +693,6 @@ if __name__ == '__main__':
         # width = modelRun.APWidth(volt, t, 150, 5)
         # print(f'Tau: {tau} ms')
 
-    testRun()
+        wb.save('measurements.xls')
+
+    testRun(False,False)
