@@ -416,7 +416,7 @@ class FiveCompModel():
             plt.title('AHP-Rising Time')
             plt.show()
         if EnablePrinting:
-            print(f'AHPRisingTime :{AHPRisingTime} mV')
+            print(f'AHPRisingTime :{AHPRisingTime} mSecs')
         return AHPRisingTime
 
     def Rheobase(self,accuracy,refineTimes:int,EnablePlotting,EnablePrinting,duration=50,delay=150):
@@ -451,7 +451,7 @@ class FiveCompModel():
             refineTimes -= 1
         rheobase = end
         if EnablePrinting:
-            print(f'rheobase {rheobase}')
+            print(f'rheobase {rheobase} nA')
         return rheobase
         
 ########################################################################        
@@ -629,17 +629,17 @@ if __name__ == '__main__':
         modelRun = FiveCompModel()
         
         rIn = modelRun.inputResistance(-0.5,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"input Resistance")
+        row = xlSheetWriteRows(xlSheet,row,col,"input Resistance (mV/nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(rIn,2))
 
         testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
         avgRin = modelRun.avgInRes(testAmps,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"Average input Resistance")
+        row = xlSheetWriteRows(xlSheet,row,col,"Average input Resistance (mV/nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(avgRin,2))
 
 
         tau = modelRun.timeConstant(-0.5,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"time Constant")
+        row = xlSheetWriteRows(xlSheet,row,col,"time Constant (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(tau,2))
 
 
@@ -650,37 +650,37 @@ if __name__ == '__main__':
         # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
         # print(f'Is Spike: {res}')
         APHeight,rest,peak = modelRun.APHeight(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AP Height")
+        row = xlSheetWriteRows(xlSheet,row,col,"AP Height (mV)")
         col = xlSheetWriteCols(xlSheet,row,col,round(APHeight,2))
 
         APWidth = modelRun.APWidth(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AP Width")
+        row = xlSheetWriteRows(xlSheet,row,col,"AP Width (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(APWidth,2))
 
         AHPDepth = modelRun.AHPDepth(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AHP Depth")
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Depth (mV)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPDepth,2))
 
         AHPDuration = modelRun.AHPDuration(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AHP Duration")
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Duration (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPDuration,2))
 
         AHPHalfDuration = modelRun.AHPHalfDuration(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Duration")
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Duration (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPHalfDuration,2))
 
 
         AHPHalfDecay = modelRun.AHPHalfDecay(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Decay")
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Half-Decay (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPHalfDecay,2))
 
 
         AHPRisingTime = modelRun.AHPRisingTime(volt,t,delay,duration,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"AHP Rising-Time")
+        row = xlSheetWriteRows(xlSheet,row,col,"AHP Rising-Time (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPRisingTime,2))
 
         Rheobase = modelRun.Rheobase(Level.VLOW,3,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"Rheobase")
+        row = xlSheetWriteRows(xlSheet,row,col,"Rheobase (nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(Rheobase,2))
 
 
