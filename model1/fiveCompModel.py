@@ -601,6 +601,43 @@ class FiveCompModel():
 ########################################################################        
 ########################################################################        
 
+        
+########################################################################        
+##################         Parameter setters         ###################        
+##################          in trash phase           ###################
+########################################################################   
+     
+    def setSomaParams(self,g_pas,gnabar_NafSmb1,th_NafSmb1,gkdrbar_KdrSmb1,gkcabar_CaSmb1,gcanbar_CaSmb1,gcalbar_CaSmb1,amA_NafSmb1,bmA_NafSmb1,theta_h_NafSmb1,theta_n_KdrSmb1,thetamn_CaSmb1,thetahn_CaSmb1,f_CaSmb1,alpha_CaSmb1,kca_CaSmb1,kd_CaSmb1,nexp_CaSmb1):
+
+        pass
+
+    def somaParams(self):
+
+        print(self.model.soma.g_pas)
+        print(self.model.soma.gnabar_NafSmb1)
+        # print(self.model.soma.th_NafSmb1)
+        print(self.model.soma.gkdrbar_KdrSmb1)
+        print(self.model.soma.gkcabar_CaSmb1)
+        print(self.model.soma.gcanbar_CaSmb1)
+        print(self.model.soma.gcalbar_CaSmb1)
+        self.model.soma.gcalbar_CaSmb1 = 999 # tring to set 
+        print(self.model.soma.gcalbar_CaSmb1)
+        print(self.model.soma.amA_NafSmb1)
+        print(self.model.soma.bmA_NafSmb1)
+        print(self.model.soma.theta_h_NafSmb1)
+        print(self.model.soma.theta_n_KdrSmb1)
+        print(self.model.soma.thetamn_CaSmb1)
+        print(self.model.soma.thetahn_CaSmb1)
+        print(self.model.soma.f_CaSmb1)
+        print(self.model.soma.alpha_CaSmb1)
+        print(self.model.soma.kca_CaSmb1)
+        print(self.model.soma.kd_CaSmb1)
+        print(self.model.soma.nexp_CaSmb1)
+        # print((self.model.soma.L))
+
+########################################################################        
+########################################################################        
+
 
 if __name__ == '__main__':
 
@@ -695,4 +732,8 @@ if __name__ == '__main__':
 
         wb.save('measurements.xls')
 
-    testRun(False,False)
+
+    # testRun(False,False)
+
+model = FiveCompModel()
+model.somaParams()
