@@ -23,10 +23,10 @@
   - Tstop = 500 ms
 
 ### AP Height - AP Width - AHP Depth - AHP Duration - AHP Half-Duration - AHP Half-Decay - AHP Rising-Time - Rheobase
-  - Current = 12 nA
+  - Current = 21 nA
   - Iclamp at = iseg (0.5)
   - delay = 150 ms
-  - duration = 6 ms
+  - duration = 1 ms
   - Tstop = 500 ms
 
 

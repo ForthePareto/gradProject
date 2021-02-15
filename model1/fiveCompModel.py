@@ -116,13 +116,13 @@ class FiveCompModel():
         """
         delay = 150
         duration = 100
-        volt, t = self.stimulateCell(
-            amp, duration=duration, delay=delay, stimSeg=self.model.soma, clampAt=0.5, Tstop=500)
+        volt, t = self.stimulateCell(amp, duration=duration, delay=delay, stimSeg=self.model.soma, clampAt=0.5, Tstop=500)
         tStart = delay + duration
         # TODO: make a function that detects stable intervales and use it in time constant function
-        tEnd = delay + duration + 100
+        tEnd = delay + duration + 30
 
         slicedVolt, slicedTime = self.sliceSpikeGraph(volt, t, tStart, tEnd)
+        # slicedVolt, slicedTime,plt = self.patternHighligher(volt,t,tStart,duration,EnablePlotting = True)
 
         vStart = slicedVolt[0]
         vEnd = slicedVolt[-1]
@@ -197,14 +197,14 @@ class FiveCompModel():
         """
         # TODO: find the end of the spike with the interval function that will be done later
         # volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
-        volt , time ,plt= self.patternHighligher(voltVec,timeVec,delay,duration,EnablePlotting)
-        apHeight , vRest , vPeak = self.APHeight(voltVec,timeVec,delay,duration,EnablePlotting,EnablePrinting)
+        volt , time ,plt= self.patternHighligher(voltVec,timeVec,delay,duration,False)
+        apHeight , vRest , vPeak = self.APHeight(voltVec,timeVec,delay,duration,False,False)
         # calculate the mid point
         apHalfV = (apHeight / 2) + vRest
         
 
         # find actual matches
-        matches =self.closeMatches(volt,apHalfV,4.5)
+        matches =self.closeMatches(volt,apHalfV,5)
         matches = list(zip(*matches))
         # print(f'matches {matches}')
         vMatches = matches[0]
@@ -225,8 +225,8 @@ class FiveCompModel():
 
             plt.show()
         if EnablePrinting:
-            print(f'vRest {vRest} mV')
-            print(f'apHalfV {apHalfV} mV')
+            # print(f'vRest {vRest} mV')
+            # print(f'apHalfV {apHalfV} mV')
             print(f'apWidth: {apWidth} ms')
         return apWidth
 
@@ -319,11 +319,11 @@ class FiveCompModel():
 
         AHPHalfV = ((AHPPeakV - AHPStartV) / 2) + AHPStartV 
         # find close matches to the exact value of {AHPHalfV}
-        matches = self.closeMatches(volt,AHPHalfV,0.005)
+        matches = self.closeMatches(volt,AHPHalfV,0.05)
         matches = list(zip(*matches))
         if EnablePrinting:
             print(f'AHPHalfV :{AHPHalfV}')
-            print(f'matches {matches}')
+            # print(f'matches {matches}')
         matchesV,matchesT = matches
         # left point
         v1 = matchesV[0]
@@ -681,11 +681,13 @@ if __name__ == '__main__':
 
 
         delay = 150
-        duration = 6
-        current = 12
+        duration = 1
+        current = 21
         volt, t = modelRun.stimulateCell(current, duration, delay, modelRun.iseg, 0.5, 500)
-        # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
-        # print(f'Is Spike: {res}')
+        # plt = modelRun.model.graphVolt(volt,t,"AP")
+        # plt.show()
+        # # res = modelRun.isSpike(volt,t,delay,duration,Level.HIGH)
+        # # print(f'Is Spike: {res}')
         APHeight,rest,peak = modelRun.APHeight(volt,t,delay,duration,EnablePlotting,EnablePrinting)
         row = xlSheetWriteRows(xlSheet,row,col,"AP Height (mV)")
         col = xlSheetWriteCols(xlSheet,row,col,round(APHeight,2))
@@ -716,24 +718,24 @@ if __name__ == '__main__':
         row = xlSheetWriteRows(xlSheet,row,col,"AHP Rising-Time (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPRisingTime,2))
 
-        Rheobase = modelRun.Rheobase(Level.VLOW,3,EnablePlotting,EnablePrinting)
+        Rheobase = modelRun.Rheobase(Level.VLOW,5,EnablePlotting,EnablePrinting)
         row = xlSheetWriteRows(xlSheet,row,col,"Rheobase (nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(Rheobase,2))
 
 
-        # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=False)
-        # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=True)
-        # print(spikeV)
-        # plt = modelRun.model.graphOverlap(volt, t, 'k',"Full AP",0.8,
-        #                                 spikeV,spikeT,'r',"Spike",1.0,"SPIKE Pattern")
-        # plt.show()
-        # width = modelRun.APWidth(volt, t, 150, 5)
-        # print(f'Tau: {tau} ms')
+        # #spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=False)
+        # # spikeV,spikeT,plt = modelRun.patternHighligher(volt,t,-65,150,6,reverse=True)
+        # # print(spikeV)
+        # # plt = modelRun.model.graphOverlap(volt, t, 'k',"Full AP",0.8,
+        # #                                 spikeV,spikeT,'r',"Spike",1.0,"SPIKE Pattern")
+        # # plt.show()
+        # # width = modelRun.APWidth(volt, t, 150, 5)
+        # # print(f'Tau: {tau} ms')
 
         wb.save('measurements.xls')
 
 
-    # testRun(False,False)
+    testRun(EnablePlotting = True,EnablePrinting = True)
 
-model = FiveCompModel()
-model.somaParams()
+    # model = FiveCompModel()
+    # model.somaParams()
