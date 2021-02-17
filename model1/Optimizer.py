@@ -5,10 +5,10 @@ from fiveCompModel import FiveCompModel
 
 
 class ModelOptimizer:
-    def __init__(self, model, experimental_data, variables_boundaries):
+    def __init__(self, model):
         self.model = model
-        self.experimental_data = experimental_data
-        self.variables_boundaries = variables_boundaries
+        self.experimental_data = model.experimental_data
+        self.experimental_data_boundaries = model.experimental_data_boundaries
         self.best_solution = None
         self.best_score = None
 
@@ -21,7 +21,7 @@ class ModelOptimizer:
 
     def optimize(self):
         model = ga(function=self.cost, dimension=len(self.experimental_data),
-                   variable_type='real', variable_boundaries=self.variables_boundaries, convergence_curve=False)
+                   variable_type='real', variable_boundaries=self.experimental_data_boundaries, convergence_curve=False)
 
         model.run()
         self.best_solution = model.best_variable
@@ -30,6 +30,4 @@ class ModelOptimizer:
 
 if __name__ == '__main__':
     cell_model = FiveCompModel()
-    experimental_data = cell_model.measurements()
-    variable_boundaries = cell_model.boundaries
     optimizer = ModelOptimizer(cell_model)
