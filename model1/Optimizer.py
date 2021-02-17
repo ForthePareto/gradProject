@@ -15,17 +15,19 @@ class ModelOptimizer:
     def cost(self, params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
-        self.setSomaParams(*params)
+        self.model.setSomaParams(*params)
+        measurements = self.model.get_measurements()
 
-        norm_cost = np.linalg.norm(self.experimental_data - params)
+        norm_cost = np.linalg.norm(self.experimental_data - measurements)
+        return norm_cost
 
     def optimize(self):
-        model = ga(function=self.cost, dimension=len(self.experimental_data),
+        GA_Optizimer = ga(function=self.cost, dimension=len(self.experimental_data),
                    variable_type='real', variable_boundaries=self.experimental_data_boundaries, convergence_curve=False)
 
-        model.run()
-        self.best_solution = model.best_variable
-        self.best_score = model.best_function
+        GA_Optizimer.run()
+        self.best_solution = GA_Optizimer.best_variable
+        self.best_score = GA_Optizimer.best_function
 
 
 if __name__ == '__main__':
