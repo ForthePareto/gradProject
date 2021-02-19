@@ -613,26 +613,27 @@ class FiveCompModel():
 
     def somaParams(self):
 
-        print(self.model.soma.g_pas)
-        print(self.model.soma.gnabar_NafSmb1)
-        # print(self.model.soma.th_NafSmb1)
-        print(self.model.soma.gkdrbar_KdrSmb1)
-        print(self.model.soma.gkcabar_CaSmb1)
-        print(self.model.soma.gcanbar_CaSmb1)
-        print(self.model.soma.gcalbar_CaSmb1)
-        self.model.soma.gcalbar_CaSmb1 = 999 # tring to set 
-        print(self.model.soma.gcalbar_CaSmb1)
-        print(self.model.soma.amA_NafSmb1)
-        print(self.model.soma.bmA_NafSmb1)
-        print(self.model.soma.theta_h_NafSmb1)
-        print(self.model.soma.theta_n_KdrSmb1)
-        print(self.model.soma.thetamn_CaSmb1)
-        print(self.model.soma.thetahn_CaSmb1)
-        print(self.model.soma.f_CaSmb1)
-        print(self.model.soma.alpha_CaSmb1)
-        print(self.model.soma.kca_CaSmb1)
-        print(self.model.soma.kd_CaSmb1)
-        print(self.model.soma.nexp_CaSmb1)
+        # print(self.model.soma.g_pas)
+        # print(self.model.soma.gnabar_NafSmb1)
+        # # print(self.model.soma.th_NafSmb1)
+        # print(self.model.soma.gkdrbar_KdrSmb1)
+        # print(self.model.soma.gkcabar_CaSmb1)
+        # print(self.model.soma.gcanbar_CaSmb1)
+        # print(self.model.soma.gcalbar_CaSmb1)
+        # self.model.soma.gcalbar_CaSmb1 = 999 # tring to set 
+        # print(self.model.soma.gcalbar_CaSmb1)
+        # print(self.model.cell.amA_NafSmb1)
+        self.model.setP()
+        # print(self.model.soma.bmA_NafSmb1)
+        # print(self.model.soma.theta_h_NafSmb1)
+        # print(self.model.soma.theta_n_KdrSmb1)
+        # print(self.model.soma.thetamn_CaSmb1)
+        # print(self.model.soma.thetahn_CaSmb1)
+        # print(self.model.soma.f_CaSmb1)
+        # print(self.model.soma.alpha_CaSmb1)
+        # print(self.model.soma.kca_CaSmb1)
+        # print(self.model.soma.kd_CaSmb1)
+        # print(self.model.soma.nexp_CaSmb1)
         # print((self.model.soma.L))
 
 ########################################################################        
@@ -669,10 +670,10 @@ if __name__ == '__main__':
         row = xlSheetWriteRows(xlSheet,row,col,"input Resistance (mV/nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(rIn,2))
 
-        testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
-        avgRin = modelRun.avgInRes(testAmps,EnablePlotting,EnablePrinting)
-        row = xlSheetWriteRows(xlSheet,row,col,"Average input Resistance (mV/nA)")
-        col = xlSheetWriteCols(xlSheet,row,col,round(avgRin,2))
+        # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
+        # avgRin = modelRun.avgInRes(testAmps,EnablePlotting,EnablePrinting)
+        # row = xlSheetWriteRows(xlSheet,row,col,"Average input Resistance (mV/nA)")
+        # col = xlSheetWriteCols(xlSheet,row,col,round(avgRin,2))
 
 
         tau = modelRun.timeConstant(-0.5,EnablePlotting,EnablePrinting)
@@ -718,7 +719,7 @@ if __name__ == '__main__':
         row = xlSheetWriteRows(xlSheet,row,col,"AHP Rising-Time (ms)")
         col = xlSheetWriteCols(xlSheet,row,col,round(AHPRisingTime,2))
 
-        Rheobase = modelRun.Rheobase(Level.VLOW,5,EnablePlotting,EnablePrinting)
+        Rheobase = modelRun.Rheobase(Level.VLOW,2,EnablePlotting,EnablePrinting)
         row = xlSheetWriteRows(xlSheet,row,col,"Rheobase (nA)")
         col = xlSheetWriteCols(xlSheet,row,col,round(Rheobase,2))
 
