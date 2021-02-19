@@ -2,6 +2,7 @@ import numpy as np
 from geneticalgorithm import geneticalgorithm as ga
 
 def f(X):
+    print(X.shape)
     return np.sum(X)
 
 

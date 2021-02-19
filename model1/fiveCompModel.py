@@ -3,6 +3,7 @@ import math
 import numpy as np
 from xlwt import Workbook
 import time
+from neuron import h
 
 
 PLOTTING = False
@@ -24,8 +25,9 @@ class FiveCompModel():
                                           ["AHP Half-Decay", 26.75],
                                           ["AHP Rising-Time", 11.27],
                                           ["Rheobase", 7.88]])
-
-        self.Parmeters_boundaries = {"conductance": [0, 1]}
+        self.measurements = np.zeros((9))
+        
+        # self.Parmeters_boundaries = {"conductance": [0, 1]}
         # self.xlSheet = None
         # self.row = None
         # self.col = None
@@ -200,11 +202,11 @@ class FiveCompModel():
 
     def APWidth(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
         # FIXME: matches aren't aon the same level , but close enough ... (works for me)
-        """ measures the AP width of the spike 
+        """ measures the AP width of the spike
 
-                :param voltVec: recoreded vector of the spike voltage 
+                :param voltVec: recoreded vector of the spike voltage
                 :param timeVec: recoreded vector of the spike time
-                :param delay: the time at which the cell is stimulated   
+                :param delay: the time at which the cell is stimulated
                 :param duration: the time for which the stimulation is continued
                 :param plotting: Boolean used to toggle plotting on and off
                 :param printing: Boolean used to toggle printing on and off
@@ -249,10 +251,10 @@ class FiveCompModel():
         return apWidth
 
     def AHPDepth(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        """ Calculate the depth of the AHP phase in mV   
+        """ Calculate the depth of the AHP phase in mV
 
         Args:
-            :param voltVec: recoreded vector of the spike voltage 
+            :param voltVec: recoreded vector of the spike voltage
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
@@ -284,10 +286,10 @@ class FiveCompModel():
         return AHPDepthV
 
     def AHPDuration(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        """ Calculate the duration of the AHP phase in mSec   
+        """ Calculate the duration of the AHP phase in mSec
 
         Args:
-            :param voltVec: recoreded vector of the spike voltage 
+            :param voltVec: recoreded vector of the spike voltage
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
@@ -319,10 +321,10 @@ class FiveCompModel():
         return AHPDuration
 
     def AHPHalfDuration(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        """ Calculate the half-duration of the AHP phase in mSec   
+        """ Calculate the half-duration of the AHP phase in mSec
 
         Args:
-            :param voltVec: recoreded vector of the spike voltage 
+            :param voltVec: recoreded vector of the spike voltage
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
@@ -367,10 +369,10 @@ class FiveCompModel():
         return AHPHalfDuration
 
     def AHPHalfDecay(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        """ Calculate the half-decay of the AHP phase in mSec   
+        """ Calculate the half-decay of the AHP phase in mSec
 
         Args:
-            :param voltVec: recoreded vector of the spike voltage 
+            :param voltVec: recoreded vector of the spike voltage
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
@@ -413,10 +415,10 @@ class FiveCompModel():
         return AHPHalfDecay
 
     def AHPRisingTime(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        """ Calculate the Rising Time of the AHP phase in mSec   
+        """ Calculate the Rising Time of the AHP phase in mSec
 
             Args:
-                :param voltVec: recoreded vector of the spike voltage 
+                :param voltVec: recoreded vector of the spike voltage
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the stimulation is started
                 :param duration: the time for which the stimulation is continued
@@ -449,12 +451,12 @@ class FiveCompModel():
     def Rheobase(self, accuracy, refineTimes: int, plotting=PLOTTING, printing=PRINTING, duration=50, delay=150):
         """ Calculate Rheobase current of the cell in nA
             Args:
-                :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
-                :param refineTimes: number of repeation, the higher, the more accurate the Rheobase     
+                :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}
+                :param refineTimes: number of repeation, the higher, the more accurate the Rheobase
                 :param plotting: Boolean used to toggle printing on and off
                 :param printing: Boolean used to toggle printing on and off
                 :param duration: the time for which the stimulation is continued (should be +50 ms)
-                :param delay: the time at which the stimulation is started 
+                :param delay: the time at which the stimulation is started
 
             :return rheobase: Calculate Rheobase current of the cell in nA
         """
@@ -490,13 +492,13 @@ class FiveCompModel():
     def sliceSpikeGraph(self, voltVec, tVec, startAtTime, endAtTime):
         """ Slices the spike between two desired times
 
-                :param voltVec: recoreded vector of the spike voltage 
+                :param voltVec: recoreded vector of the spike voltage
                 :param tVec: recoreded vector of the spike time
                 :param startAtTime: time in (ms) at which start the slice
                 :param endAtTime: time in (ms) at which end the slice
 
 
-            :return slicedVolt: (list) of the sliced spike's voltVec  
+            :return slicedVolt: (list) of the sliced spike's voltVec
             :return slicedTime: (list) of the sliced spike's tVec
 
          """
@@ -514,12 +516,12 @@ class FiveCompModel():
         return slicedVolt, slicedTime
 
     def closeMatches(self, lst: list, findVal, tolerance):
-        """ find a list of closest matches to a specific value with a spicified tolerance 
+        """ find a list of closest matches to a specific value with a spicified tolerance
             Args:
                 :param lst: target list to search into
                 :param findVal: target value
                 :param tolerance: accepted error in matches
-            :return: list of (value,index) pairs 
+            :return: list of (value,index) pairs
         """
         # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
         matches = [(val, index) for index, val in enumerate(lst)
@@ -530,7 +532,7 @@ class FiveCompModel():
     def patternHighligher(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, restingVolt=-65, reverse=False):
         """ Detects the up-down shape of the spike and extracts it
             Args:
-                :param voltVec: recoreded vector of the spike voltage 
+                :param voltVec: recoreded vector of the spike voltage
                 :param timeVec: recoreded vector of the spike time
                 :param delay: the time at which the stimulation is started
                 :param duration: the time for which the stimulation is continued
@@ -601,14 +603,14 @@ class FiveCompModel():
         return lst1, lst2
 
     def isSpike(self, voltVec, timeVec, delay, duration, accuracy: Level, plotting=PLOTTING) -> bool:
-        """ detect if there is a spike 
+        """ detect if there is a spike
 
         Args:
-            :param voltVec: recoreded vector of the spike voltage 
+            :param voltVec: recoreded vector of the spike voltage
             :param timeVec: recoreded vector of the spike time
             :param delay: the time at which the stimulation is started
             :param duration: the time for which the stimulation is continued
-            :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}  
+            :param accuracy: accuracy level {Level.HIGH, Level.MID, Level.LOW,Level.VLOW}
             :param plotting: Boolean used to toggle plotting on and off
 
         :return bool: true if spike and false otherwise
@@ -629,47 +631,83 @@ class FiveCompModel():
 ##################          in trash phase           ###################
 ########################################################################
 
-    def setSomaParams(self, g_pas, gnabar_NafSmb1, th_NafSmb1, gkdrbar_KdrSmb1, gkcabar_CaSmb1, gcanbar_CaSmb1, gcalbar_CaSmb1, amA_NafSmb1, bmA_NafSmb1, theta_h_NafSmb1, theta_n_KdrSmb1, thetamn_CaSmb1, thetahn_CaSmb1, f_CaSmb1, alpha_CaSmb1, kca_CaSmb1, kd_CaSmb1, nexp_CaSmb1):
-
-        pass
+    def setCellParams(self, params: list):
+        g_pas, gnabar_NafSmb1, gkdrbar_KdrSmb1, gkcabar_CaSmb1, gcanbar_CaSmb1, gcalbar_CaSmb1, \
+            th_NafSmb1, amA_NafSmb1, bmA_NafSmb1, theta_h_NafSmb1, theta_n_KdrSmb1, \
+            thetamn_CaSmb1, thetahn_CaSmb1, f_CaSmb1, alpha_CaSmb1, kca_CaSmb1, kd_CaSmb1, nexp_CaSmb1 = tuple(
+                params)
 
     def somaParams(self):
 
         print(self.model.soma.g_pas)
         print(self.model.soma.gnabar_NafSmb1)
-        # print(self.model.soma.th_NafSmb1)
         print(self.model.soma.gkdrbar_KdrSmb1)
         print(self.model.soma.gkcabar_CaSmb1)
         print(self.model.soma.gcanbar_CaSmb1)
         print(self.model.soma.gcalbar_CaSmb1)
-        self.model.soma.gcalbar_CaSmb1 = 999  # tring to set
-        print(self.model.soma.gcalbar_CaSmb1)
-        print(self.model.soma.amA_NafSmb1)
-        print(self.model.soma.bmA_NafSmb1)
-        print(self.model.soma.theta_h_NafSmb1)
-        print(self.model.soma.theta_n_KdrSmb1)
-        print(self.model.soma.thetamn_CaSmb1)
-        print(self.model.soma.thetahn_CaSmb1)
-        print(self.model.soma.f_CaSmb1)
-        print(self.model.soma.alpha_CaSmb1)
-        print(self.model.soma.kca_CaSmb1)
-        print(self.model.soma.kd_CaSmb1)
-        print(self.model.soma.nexp_CaSmb1)
-        # print((self.model.soma.L))
+        print(h.th_NafSmb1)
+        print(h.amA_NafSmb1)
+        print(h.bmA_NafSmb1)
+        print(h.theta_h_NafSmb1)
+        print(h.theta_n_KdrSmb1)
+        print(h.thetamn_CaSmb1)
+        print(h.thetahn_CaSmb1)
+        print(h.f_CaSmb1)
+        print(h.alpha_CaSmb1)
+        print(h.kca_CaSmb1)
+        print(h.kd_CaSmb1)
+        print(h.nexp_CaSmb1)
 
 ########################################################################
 ########################################################################
-    def get_exprimental_data(self):
+    def get_exprimental_data(self): 
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
 
         Returns:
             [numpy.array]
         """
-        return self.EXPRIMENTAL_DATA[:, 1]
-    # TODO
+        return self.EXPRIMENTAL_DATA[:, 1].astype(np.float)
 
     def get_parameters_boundaries(self):
-        pass
+        boundaries = np.concatenate(
+            (np.array([[0, 1]]*7), np.array([[0, 130]]*11)))
+        return boundaries
+
+    def get_measurements(self):
+        delay = 150
+        duration = 1
+        current = 21
+        rIn = self.inputResistance(-0.5,
+                                   plotting=False, printing=False)
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        APHeight, rest, peak = self.APHeight(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        APWidth = self.APWidth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDepth = self.AHPDepth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDuration = self.AHPDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDuration = self.AHPHalfDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDecay = self.AHPHalfDecay(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPRisingTime = self.AHPRisingTime(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        Rheobase = self.Rheobase(
+            Level.VLOW, 5, plotting=False, printing=False)
+        self.measurements = np.array( [rIn, APHeight, APWidth, AHPDepth, AHPDuration,
+            AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
+        print(self.measurements)
+        return self.measurements
 
 
 if __name__ == '__main__':
@@ -695,15 +733,16 @@ if __name__ == '__main__':
 
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
         modelRun = FiveCompModel()
-
+        # modelRun.somaParams()
+        print(modelRun.get_measurements().astype(np.float)-modelRun.get_exprimental_data().astype(np.float))
         rIn = modelRun.inputResistance(-0.5,
                                        plotting=plotting, printing=printing)
 
-        testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
-        avgRin = modelRun.avgInRes(
-            testAmps, plotting=plotting, printing=printing)
+        # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
+        # avgRin = modelRun.avgInRes(
+        #     testAmps, plotting=plotting, printing=printing)
 
-        tau = modelRun.timeConstant(-0.5, plotting=plotting, printing=printing)
+        # tau = modelRun.timeConstant(-0.5, plotting=plotting, printing=printing)
 
         delay = 150
         duration = 1
@@ -789,8 +828,9 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     start_time = time.time()
-    testRun(plotting=False, printing=True ,save_to_file=False)
-    print("Measurements are done in--- %s seconds ---" % (time.time() - start_time))
+    testRun(plotting=False, printing=True, save_to_file=False)
+    print("Measurements are done in--- %s seconds ---" %
+          (time.time() - start_time))
 
     # model = FiveCompModel()
     # model.somaParams()
