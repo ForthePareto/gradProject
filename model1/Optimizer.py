@@ -7,8 +7,8 @@ from fiveCompModel import FiveCompModel
 class ModelOptimizer:
     def __init__(self, model):
         self.model = model
-        self.experimental_data = model.experimental_data
-        self.experimental_data_boundaries = model.experimental_data_boundaries
+        self.experimental_data = model.get_experimental_data()
+        self.parameters_boundaries = model.get_parameters_boundaries()
         self.best_solution = None
         self.best_score = None
 
@@ -23,7 +23,7 @@ class ModelOptimizer:
 
     def optimize(self):
         GA_Optizimer = ga(function=self.cost, dimension=len(self.experimental_data),
-                   variable_type='real', variable_boundaries=self.experimental_data_boundaries, convergence_curve=False)
+                   variable_type='real', variable_boundaries=self.parameters_boundaries, convergence_curve=False)
 
         GA_Optizimer.run()
         self.best_solution = GA_Optizimer.best_variable

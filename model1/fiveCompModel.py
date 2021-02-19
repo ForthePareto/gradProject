@@ -1,68 +1,79 @@
-from NrnModel import NrnModel ,Level
+from NrnModel import NrnModel, Level
 import math
-from numpy import arange
+import numpy as np
+from xlwt import Workbook
 
-from xlwt import Workbook 
-  
+
 class FiveCompModel():
     def __init__(self,):
 
         self.model = NrnModel("5CompMy_temp.hoc")
         self.soma = self.model.soma
         self.iseg = self.model.iseg
+        self.EXPRIMENTAL_DATA = np.array(["input resistance",1.26],
+                                            ['AP Height',81.48]
+                                            ["AP Width",1.02], 
+                                            ["AHP Depth",5.31],
+                                            ["AHP Duration",64.82],
+                                            ["AHP Half-Duration",36.82],
+                                            ["AHP Half-Decay",26.75],
+                                            ["AHP Rising-Time",11.27],
+                                            ["Rheobase",7.88],
+                                            ])
+        self.Parmeters_boundaries = ["conductance" : [0,1]]
         # self.xlSheet = None
         # self.row = None
         # self.col = None
         # self.xlSheetInit()
-    
+
 
 
     def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
         """ Stimulate the cell at the desired properties
             Args:
-            :param clampAmp: the current value at which the cell is stimulated (in nA) 
+            :param clampAmp: the current value at which the cell is stimulated (in nA)
             :param duration: the time for which the stimulation is continued
             :param delay: the time at which the stimulation is started
             :param stimSeg: the segment at which the cell is stimulated
             :param clampAt: the location in the segment at which clamp is inserted
             :param Tstop: the duration for which the recording is done
             :param init: the resting membrane voltage of the cell
-        
+
         :return volt: the recorded voltage vector
         :return t: the recorded time vector
-        
+
          """
-        stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
-        volt, t = self.model.recordVolt(self.model.soma, 0.5)
+        stim= self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
+        volt, t= self.model.recordVolt(self.model.soma, 0.5)
         self.model.runControler(TStop=Tstop, init=-65)
-        
+
         return volt, t
 
     def inputResistance(self, amp, EnablePlotting, EnablePrinting):
-        """ Measures the input resistance 
+        """ Measures the input resistance
             Args:
                 :param amp: current amplitude used to stimulate the cell
                 :param EnablePlotting: Boolean used to toggle plotting on and off
                 :param EnablePrinting: Boolean used to toggle printing on and off
             :return inputResistance: input Resistance
-                
+
 
         """
-        delay = 150
-        duration = 100
-        volt, t = self.stimulateCell(
-            amp, duration=duration, delay=delay, stimSeg=self.model.soma, clampAt=0.5, Tstop=500)
+        delay= 150
+        duration= 100
+        volt, t= self.stimulateCell(
+            amp, duration = duration, delay = delay, stimSeg = self.model.soma, clampAt = 0.5, Tstop = 500)
 
         # TODO: slice the time interval of the stimulas and get the plateau volts
         # ::DONE::
-        slicedVolt, slicedT = self.sliceSpikeGraph(
+        slicedVolt, slicedT=self.sliceSpikeGraph(
             volt, t, delay - 10, delay + duration + 10)
 
-        restMembPot = max(slicedVolt)  # Should be around -65 mv
-        minDepolarPot = min(slicedVolt)
+        restMembPot=max(slicedVolt)  # Should be around -65 mv
+        minDepolarPot=min(slicedVolt)
 
         # should it always be positive  ??
-        inputResistance = abs((restMembPot - minDepolarPot)/amp)
+        inputResistance=abs((restMembPot - minDepolarPot)/amp)
         # print(self.soma.psection())
 
         if EnablePrinting:
@@ -79,7 +90,7 @@ class FiveCompModel():
         if EnablePlotting:
             # TODO: overlay plots , plot full graph and the sliced with diff color ,  and mark points on the graph
             # ::DONE::
-            plt = self.model.graphOverlap(
+            plt=self.model.graphOverlap(
                 volt, t, 'k', 'Full Spike', 0.8, slicedVolt, slicedT, 'g', 'Sliced spike', 1.0, 'input Resistance')
             plt.show()
         return inputResistance
@@ -91,12 +102,13 @@ class FiveCompModel():
                 :param EnablePlotting: Boolean used to toggle plotting on and off
                 :param EnablePrinting: Boolean used to toggle printing on and off
             :return avgInRes: average input Resistance
-                
+
 
         """
-        inputRes = [self.inputResistance(amp, EnablePlotting, EnablePrinting) for amp in sampleAmps]
-        avgInRes = sum(inputRes)/len(inputRes)
-        
+        inputRes=[self.inputResistance(
+            amp, EnablePlotting, EnablePrinting) for amp in sampleAmps]
+        avgInRes=sum(inputRes)/len(inputRes)
+
         if EnablePrinting:
             print("----- Averaged Input Resistance  -----\n")
             # print(f'inputRes List: \n{inputRes}\n')
@@ -105,29 +117,30 @@ class FiveCompModel():
 
         return avgInRes
 
-    def timeConstant(self, amp,EnablePlotting, EnablePrinting):
-        """ Measures the time constant 
+    def timeConstant(self, amp, EnablePlotting, EnablePrinting):
+        """ Measures the time constant
             Args:
                 :param amp: List of current amplitudes used to stimulate the cell
                 :param EnablePlotting: Boolean used to toggle plotting on and off
                 :param EnablePrinting: Boolean used to toggle printing on and off
-            
+
             :return tC: time constant
         """
-        delay = 150
-        duration = 100
-        volt, t = self.stimulateCell(amp, duration=duration, delay=delay, stimSeg=self.model.soma, clampAt=0.5, Tstop=500)
-        tStart = delay + duration
+        delay=150
+        duration=100
+        volt, t=self.stimulateCell(amp, duration = duration, delay = delay,
+                                   stimSeg = self.model.soma, clampAt = 0.5, Tstop = 500)
+        tStart=delay + duration
         # TODO: make a function that detects stable intervales and use it in time constant function
-        tEnd = delay + duration + 30
+        tEnd=delay + duration + 30
 
-        slicedVolt, slicedTime = self.sliceSpikeGraph(volt, t, tStart, tEnd)
+        slicedVolt, slicedTime=self.sliceSpikeGraph(volt, t, tStart, tEnd)
         # slicedVolt, slicedTime,plt = self.patternHighligher(volt,t,tStart,duration,EnablePlotting = True)
 
-        vStart = slicedVolt[0]
-        vEnd = slicedVolt[-1]
-        tC = -(tEnd - tStart) / math.log(1 - (vEnd/vStart))
-        
+        vStart=slicedVolt[0]
+        vEnd=slicedVolt[-1]
+        tC=-(tEnd - tStart) / math.log(1 - (vEnd/vStart))
+
         if EnablePrinting:
             print(f'Time Constant: {tC}')
             # print(f'vStart: {vStart}')
@@ -135,45 +148,45 @@ class FiveCompModel():
             # print(f'tStart: {tStart}')
             # print(f'tEnd: {tEnd}')
         if EnablePlotting:
-            plt = self.model.graphOverlap(volt, t, 'k', 'Full Spike', 0.8,
+            plt=self.model.graphOverlap(volt, t, 'k', 'Full Spike', 0.8,
                                          slicedVolt, slicedTime, 'g', 'Sliced spike', 1.0, 'Time Constant')
             # self.model.graphMarker(plt,tStart,vStart,'start Point')
             plt.show()
         return tC
 
-    def APHeight(self,voltVec,timeVec,delay, duration,EnablePlotting,EnablePrinting):
-        """ measures the AP Height of the spike 
+    def APHeight(self, voltVec, timeVec, delay, duration, EnablePlotting, EnablePrinting):
+        """ measures the AP Height of the spike
             Args:
-                :param voltVec: recoreded vector of the spike voltage 
+                :param voltVec: recoreded vector of the spike voltage
                 :param timeVec: recoreded vector of the spike time
-                :param delay: the time at which the cell is stimulated   
+                :param delay: the time at which the cell is stimulated
                 :param duration: the time for which the stimulation is continued
                 :param EnablePlotting: Boolean used to toggle plotting on and off
                 :param EnablePrinting: Boolean used to toggle printing on and off
-            
+
             :return apHeight: the Height of the spike in milliVolts
-            
+
             :return apRest: the resting potential in milliVolts
-            
+
             :return apPeak: the peak potential in milliVolts
 
         """
-        volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
+        volt, time=self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
         # get peak point
-        vPeak = max(volt)
-        indexPeak = volt.index(vPeak)
-        TPeak = time[indexPeak]
-        # get restng point 
-        vRest = volt[0]
-        indexVRest = volt.index(vRest)
-        tRest = time[indexVRest]
-        apHeight = abs(vPeak - vRest)
-        
-        if EnablePrinting: 
+        vPeak=max(volt)
+        indexPeak=volt.index(vPeak)
+        TPeak=time[indexPeak]
+        # get restng point
+        vRest=volt[0]
+        indexVRest=volt.index(vRest)
+        tRest=time[indexVRest]
+        apHeight=abs(vPeak - vRest)
+
+        if EnablePrinting:
             print(f'apHeight: {apHeight} mV')
 
         if EnablePlotting:
-            plt = self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
+            plt=self.model.graphOverlap(voltVec, timeVec, 'k', 'Full AP', 0.8,
                                         volt, time, 'g', 'AP Spike', 1.0, 'AP Height')
 
             self.model.graphMarker(plt, TPeak, vPeak, 'AP Peak', 'x')
@@ -182,7 +195,7 @@ class FiveCompModel():
         return  apHeight , vRest , vPeak 
 
     def APWidth(self, voltVec, timeVec, delay, duration,EnablePlotting,EnablePrinting):
-        ## FIXME: matches aren't aon the same level , but close enough ... (works for me) 
+        # FIXME: matches aren't aon the same level , but close enough ... (works for me) 
         """ measures the AP width of the spike 
 
                 :param voltVec: recoreded vector of the spike voltage 
@@ -436,7 +449,7 @@ class FiveCompModel():
         step = 1
         while refineTimes:
 
-            for current in arange(start,end,step):
+            for current in np.arange(start,end,step):
                 volt,t = self.stimulateCell(current,duration,delay,self.soma,0.5,500)
                 if self.isSpike(volt,t,delay,duration,EnablePlotting,accuracy):
 
@@ -637,7 +650,16 @@ class FiveCompModel():
 
 ########################################################################        
 ########################################################################        
+    def get_exprimental_data(self):
+        """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
 
+        Returns:
+            [numpy.array]
+        """
+        return self.EXPRIMENTAL_DATA[:,1]
+    #TODO
+    def get_parameters_boundaries(self):
+        pass
 
 if __name__ == '__main__':
 
