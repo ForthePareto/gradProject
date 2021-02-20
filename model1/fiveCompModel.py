@@ -632,9 +632,9 @@ class FiveCompModel():
 ########################################################################
 
     def setCellParams(self, params: list):
-        g_pas, gnabar_NafSmb1, gkdrbar_KdrSmb1, gkcabar_CaSmb1, gcanbar_CaSmb1, gcalbar_CaSmb1, \
-            th_NafSmb1, amA_NafSmb1, bmA_NafSmb1, theta_h_NafSmb1, theta_n_KdrSmb1, \
-            thetamn_CaSmb1, thetahn_CaSmb1, f_CaSmb1, alpha_CaSmb1, kca_CaSmb1, kd_CaSmb1, nexp_CaSmb1 = tuple(
+        self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1, \
+            h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
+            h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.kca_CaSmb1, h.kd_CaSmb1, h.nexp_CaSmb1 = tuple(
                 params)
 
     def somaParams(self):
@@ -734,7 +734,7 @@ if __name__ == '__main__':
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
         modelRun = FiveCompModel()
         # modelRun.somaParams()
-        print(modelRun.get_measurements().astype(np.float)-modelRun.get_exprimental_data().astype(np.float))
+        modelRun.setCellParams(np.ones(18))
         rIn = modelRun.inputResistance(-0.5,
                                        plotting=plotting, printing=printing)
 
@@ -749,8 +749,8 @@ if __name__ == '__main__':
         current = 21
         volt, t = modelRun.stimulateCell(
             current, duration, delay, modelRun.iseg, 0.5, 500)
-        # plt = modelRun.model.graphVolt(volt,t,"AP")
-        # plt.show()
+        plt = modelRun.model.graphVolt(volt,t,"AP")
+        plt.show()
         # # res = modelRun.isSpike(volt,t,delay,,Level.HIGH,duration)
         # # print(f'Is Spike: {res}')
         APHeight, rest, peak = modelRun.APHeight(
@@ -828,7 +828,7 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     start_time = time.time()
-    testRun(plotting=False, printing=True, save_to_file=False)
+    testRun(plotting=True, printing=True, save_to_file=False)
     print("Measurements are done in--- %s seconds ---" %
           (time.time() - start_time))
 

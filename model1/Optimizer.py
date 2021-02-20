@@ -39,7 +39,7 @@ class ModelOptimizer:
 
         
         GA_Optizimer = ga(function=self.cost,algorithm_parameters=algorithm_param, dimension=len(self.parameters_boundaries),
-        variable_type_mixed=vartype, variable_boundaries=self.parameters_boundaries, convergence_curve=False)
+        variable_type_mixed=vartype, variable_boundaries=self.parameters_boundaries,function_timeout=20, convergence_curve=True)
         GA_Optizimer.run()
         self.best_solution = GA_Optizimer.best_variable
         self.best_score = GA_Optizimer.best_function
@@ -47,5 +47,9 @@ class ModelOptimizer:
 
 if __name__ == '__main__':
     cell_model = FiveCompModel()
+    # cell_model.setCellParams(np.random.rand(18,1))
+    # cell_model.get_measurements()
+    # cell_model.setCellParams(np.random.rand(18,1))
+    # cell_model.get_measurements()
     optimizer = ModelOptimizer(cell_model)
     optimizer.optimize()
