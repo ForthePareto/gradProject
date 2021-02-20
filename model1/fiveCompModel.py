@@ -632,10 +632,12 @@ class FiveCompModel():
 ########################################################################
 
     def setCellParams(self, params: list):
-        self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1, \
-            h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
-            h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.kca_CaSmb1, h.kd_CaSmb1, h.nexp_CaSmb1 = tuple(
-                params)
+        # self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1, \
+        #     h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
+        #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.kca_CaSmb1, h.kd_CaSmb1, h.nexp_CaSmb1 = tuple(
+        #         params)
+        self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1 = tuple(params)
+
 
     def somaParams(self):
 
@@ -669,8 +671,10 @@ class FiveCompModel():
         return self.EXPRIMENTAL_DATA[:, 1].astype(np.float)
 
     def get_parameters_boundaries(self):
-        boundaries = np.concatenate(
-            (np.array([[0, 1]]*7), np.array([[0, 130]]*11)))
+        boundaries = np.array([[0, 1]]*6)
+        # boundaries = np.array([[0, 1]]*12)
+        # boundaries = np.concatenate(
+        #     (np.array([[0, 1]]*6), np.array([[0, 130]]*12)))
         return boundaries
 
     def get_measurements(self):
@@ -703,10 +707,10 @@ class FiveCompModel():
             volt, t, delay, duration, plotting=False, printing=False)
 
         Rheobase = self.Rheobase(
-            Level.VLOW, 5, plotting=False, printing=False)
+            Level.VLOW, 1, plotting=False, printing=False)
         self.measurements = np.array( [rIn, APHeight, APWidth, AHPDepth, AHPDuration,
             AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
-        print(self.measurements)
+        print("\n Measurements: ",self.measurements)
         return self.measurements
 
 
