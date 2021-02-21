@@ -266,7 +266,7 @@ class FiveCompModel():
 
         """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=PLOTTING, reverse=True)
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         AHPStartT = t[0]
@@ -299,7 +299,7 @@ class FiveCompModel():
         :return AHPDuration:duration of the AHP phase in mSec
         """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=PLOTTING, reverse=True)
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
 
         AHPStartV = volt[0]
         AHPStartT = t[0]
@@ -334,7 +334,7 @@ class FiveCompModel():
         :return AHPHalfDuration:half duration of the AHP phase in mSec
         """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=PLOTTING, reverse=True)
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
 
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
@@ -382,7 +382,7 @@ class FiveCompModel():
         :return AHPHalfDecay:half decay of the AHP phase in mSec
         """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=PLOTTING, reverse=True)
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
 
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
@@ -428,7 +428,7 @@ class FiveCompModel():
             :return AHPRisingTime: Rising Time of the AHP phase in mSec
         """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=PLOTTING, reverse=True)
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
 
         AHPStartV = volt[0]
         AHPStartT = t[0]
@@ -616,7 +616,7 @@ class FiveCompModel():
         :return bool: true if spike and false otherwise
          """
         volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting)
+            voltVec, timeVec, delay, duration,  plotting=plotting)
         if plotting:
             plt.close()
         return (abs(max(volt) - min(volt)) >= accuracy.value)
@@ -631,12 +631,14 @@ class FiveCompModel():
 ##################          in trash phase           ###################
 ########################################################################
 
+
     def setCellParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
         #     h.kd_CaSmb1, h.nexp_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
         #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.kca_CaSmb1 = tuple(
         #         params)
-        self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1 = tuple(params)
+        self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1 = tuple(
+            params)
 
     def somaParams(self):
 
@@ -663,6 +665,7 @@ class FiveCompModel():
 
 ########################################################################
 ########################################################################
+
 
     def get_exprimental_data(self):
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
@@ -716,7 +719,6 @@ class FiveCompModel():
         return self.measurements
 
 
-
 if __name__ == '__main__':
 
     def xlSheetInit():
@@ -741,10 +743,9 @@ if __name__ == '__main__':
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
         modelRun = FiveCompModel()
         # modelRun.somaParams()
-        modelRun.setCellParams(np.ones(18))
+        # modelRun.setCellParams(np.ones(18))
         rIn = modelRun.inputResistance(-0.5,
                                        plotting=plotting, printing=printing)
-
 
         # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
         # avgRin = modelRun.avgInRes(
@@ -757,8 +758,8 @@ if __name__ == '__main__':
         current = 21
         volt, t = modelRun.stimulateCell(
             current, duration, delay, modelRun.iseg, 0.5, 500)
-        plt = modelRun.model.graphVolt(volt, t, "AP")
-        plt.show()
+        # plt = modelRun.model.graphVolt(volt, t, "AP")
+        # plt.show()
         # # res = modelRun.isSpike(volt,t,delay,,Level.HIGH,duration)
         # # print(f'Is Spike: {res}')
         APHeight, rest, peak = modelRun.APHeight(
@@ -783,7 +784,7 @@ if __name__ == '__main__':
             volt, t, delay, duration, plotting=plotting, printing=printing)
 
         Rheobase = modelRun.Rheobase(
-            Level.VLOW, 5, plotting=plotting, printing=printing)
+            Level.VLOW, 1, plotting=plotting, printing=printing)
 
         if save_to_file:
             xlSheet, wb, row, col = xlSheetInit()
@@ -806,7 +807,6 @@ if __name__ == '__main__':
 
             row = xlSheetWriteRows(xlSheet, row, col, "AHP Depth (mV)")
             col = xlSheetWriteCols(xlSheet, row, col, round(AHPDepth, 2))
-
 
             row = xlSheetWriteRows(xlSheet, row, col, "AHP Duration (ms)")
             col = xlSheetWriteCols(xlSheet, row, col, round(AHPDuration, 2))
