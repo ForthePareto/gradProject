@@ -26,7 +26,7 @@ class FiveCompModel():
                                           ["AHP Rising-Time", 11.27],
                                           ["Rheobase", 7.88]])
         self.measurements = np.zeros((9))
-        
+
         # self.Parmeters_boundaries = {"conductance": [0, 1]}
         # self.xlSheet = None
         # self.row = None
@@ -632,12 +632,11 @@ class FiveCompModel():
 ########################################################################
 
     def setCellParams(self, params: list):
-        # self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1, \
-        #     h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
-        #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.kca_CaSmb1, h.kd_CaSmb1, h.nexp_CaSmb1 = tuple(
+        # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
+        #     h.kd_CaSmb1, h.nexp_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
+        #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.kca_CaSmb1 = tuple(
         #         params)
-        self.model.g_pas, self.model.gnabar_NafSmb1, self.model.gkdrbar_KdrSmb1, self.model.gkcabar_CaSmb1, self.model.gcanbar_CaSmb1, self.model.gcalbar_CaSmb1 = tuple(params)
-
+        self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1 = tuple(params)
 
     def somaParams(self):
 
@@ -647,6 +646,11 @@ class FiveCompModel():
         print(self.model.soma.gkcabar_CaSmb1)
         print(self.model.soma.gcanbar_CaSmb1)
         print(self.model.soma.gcalbar_CaSmb1)
+        print(h.kd_CaSmb1)  # 0.0005
+        print(h.nexp_CaSmb1)  # 1
+        print(h.f_CaSmb1)  # 0.001
+        print(h.alpha_CaSmb1)  # 1
+
         print(h.th_NafSmb1)
         print(h.amA_NafSmb1)
         print(h.bmA_NafSmb1)
@@ -654,15 +658,13 @@ class FiveCompModel():
         print(h.theta_n_KdrSmb1)
         print(h.thetamn_CaSmb1)
         print(h.thetahn_CaSmb1)
-        print(h.f_CaSmb1)
-        print(h.alpha_CaSmb1)
         print(h.kca_CaSmb1)
-        print(h.kd_CaSmb1)
-        print(h.nexp_CaSmb1)
+
 
 ########################################################################
 ########################################################################
-    def get_exprimental_data(self): 
+
+    def get_exprimental_data(self):
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
 
         Returns:
@@ -674,7 +676,7 @@ class FiveCompModel():
         boundaries = np.array([[0, 1]]*6)
         # boundaries = np.array([[0, 1]]*12)
         # boundaries = np.concatenate(
-        #     (np.array([[0, 1]]*6), np.array([[0, 130]]*12)))
+        #     (np.array([[0, 1.1]]*10), np.array([[4, 70]]*8)))
         return boundaries
 
     def get_measurements(self):
@@ -708,9 +710,9 @@ class FiveCompModel():
 
         Rheobase = self.Rheobase(
             Level.VLOW, 1, plotting=False, printing=False)
-        self.measurements = np.array( [rIn, APHeight, APWidth, AHPDepth, AHPDuration,
-            AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
-        print("\n Measurements: ",self.measurements)
+        self.measurements = np.array([rIn, APHeight, APWidth, AHPDepth, AHPDuration,
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
+        print("\n Measurements: ", self.measurements)
         return self.measurements
 
 
@@ -753,7 +755,7 @@ if __name__ == '__main__':
         current = 21
         volt, t = modelRun.stimulateCell(
             current, duration, delay, modelRun.iseg, 0.5, 500)
-        plt = modelRun.model.graphVolt(volt,t,"AP")
+        plt = modelRun.model.graphVolt(volt, t, "AP")
         plt.show()
         # # res = modelRun.isSpike(volt,t,delay,,Level.HIGH,duration)
         # # print(f'Is Spike: {res}')

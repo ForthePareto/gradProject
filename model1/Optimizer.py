@@ -17,20 +17,24 @@ class ModelOptimizer:
         """
         #passing a solution of parameters to the cell model
         # print(params.shape)
-        print(params)
+        # print(params)
         try:
             self.model.setCellParams(params) 
             #getting measurement of model after parameter modification to be evaluated
             measurements = self.model.get_measurements() 
-            norm_cost = np.linalg.norm(self.experimental_data - measurements)
-        except :
+            # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+            norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
+        except (IndexError , ValueError):
             norm_cost= 100000
-
+        
+        # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+        
+        # print(norm_cost)
         return norm_cost
 
     def optimize(self):
         algorithm_param = {'max_num_iteration': None,  
-                   'population_size':10,\
+                   'population_size':50,\
                    'mutation_probability':0.1,\
                    'elit_ratio': 0.01,\
                    'crossover_probability': 0.5,\
@@ -40,7 +44,7 @@ class ModelOptimizer:
         vartype = np.array([['real']]*6)
         # vartype = np.array([['int']]*12)
         # vartype =np.concatenate(
-        #     (np.array([['real']]*6), np.array([['int']]*12)))
+        #     (np.array([['real']]*10), np.array([['int']]*8)))
 
         
         GA_Optizimer = ga(function=self.cost,algorithm_parameters=algorithm_param, dimension=len(self.parameters_boundaries),
