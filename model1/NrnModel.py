@@ -24,6 +24,9 @@ class NrnModel():
         # print('-- Model topology --')
         # print(h.topology())
 
+    def setP(self):
+        h.amA_NafSmb1 = 999
+        print(h.amA_NafSmb1)
     def singleCellRun(self, cellTemplateFile):
         # loading the cell
         h.load_file(cellTemplateFile)    # with no h current

@@ -716,6 +716,7 @@ class FiveCompModel():
         return self.measurements
 
 
+
 if __name__ == '__main__':
 
     def xlSheetInit():
@@ -743,6 +744,7 @@ if __name__ == '__main__':
         modelRun.setCellParams(np.ones(18))
         rIn = modelRun.inputResistance(-0.5,
                                        plotting=plotting, printing=printing)
+
 
         # testAmps = [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]
         # avgRin = modelRun.avgInRes(
@@ -804,6 +806,7 @@ if __name__ == '__main__':
 
             row = xlSheetWriteRows(xlSheet, row, col, "AHP Depth (mV)")
             col = xlSheetWriteCols(xlSheet, row, col, round(AHPDepth, 2))
+
 
             row = xlSheetWriteRows(xlSheet, row, col, "AHP Duration (ms)")
             col = xlSheetWriteCols(xlSheet, row, col, round(AHPDuration, 2))
