@@ -3,11 +3,13 @@ from neuron.units import ms, mV
 import matplotlib.pyplot as plt
 from enum import Enum
 
+
 class Level(Enum):
-    HIGH = 0.5 
-    MID  = 5.0
-    LOW  = 10.0
-    VLOW  = 50.0
+    HIGH = 0.5
+    MID = 5.0
+    LOW = 10.0
+    VLOW = 50.0
+
 
 class NrnModel():
     def __init__(self, cellTemplateFile):
@@ -27,6 +29,7 @@ class NrnModel():
     def setP(self):
         h.amA_NafSmb1 = 999
         print(h.amA_NafSmb1)
+
     def singleCellRun(self, cellTemplateFile):
         # loading the cell
         h.load_file(cellTemplateFile)    # with no h current
@@ -85,7 +88,6 @@ class NrnModel():
         return plt
 
     def graphMarker(self, plt, markAtT, markAtVolt, label, markerShape='X'):
-
         plt.plot(markAtT, markAtVolt, label=label, marker=markerShape)
         plt.legend()
 
