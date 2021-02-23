@@ -16,6 +16,7 @@ class FiveCompModel():
         self.model = NrnModel("5CompMy_temp.hoc")
         self.soma = self.model.soma
         self.iseg = self.model.iseg
+        self.dendrites = self.model.dendrites
         self.EXPRIMENTAL_DATA = np.array([["input resistance", 1.26],
                                           ['AP Height', 81.48],
                                           ["AP Width", 1.02],
@@ -627,21 +628,59 @@ class FiveCompModel():
 
 
 ########################################################################
-##################         Parameter setters         ###################
-##################          in trash phase           ###################
+##################  Parameter setters,getters        ###################
+##################                                   ###################
 ########################################################################
 
-
     def setCellParams(self, params: list):
+        assert (len(params)==7)
+        self.model.soma.g_pas,
+        self.model.soma.gnabar_NafSmb1,
+        self.model.soma.gkdrbar_KdrSmb1,
+        self.model.soma.gkcabar_CaSmb1,
+        self.model.soma.gcanbar_CaSmb1,
+        self.model.soma.gcalbar_CaSmb1,
+        self.model.soma.ghbar_hb1 = tuple(params)
+
+    def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
         #     h.kd_CaSmb1, h.nexp_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
         #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.kca_CaSmb1 = tuple(
         #         params)
-        self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1 = tuple(
-            params)
+        assert (len(params)==7)
+        self.model.soma.g_pas,
+        self.model.soma.gnabar_NafSmb1,
+        self.model.soma.gkdrbar_KdrSmb1,
+        self.model.soma.gkcabar_CaSmb1,
+        self.model.soma.gcanbar_CaSmb1,
+        self.model.soma.gcalbar_CaSmb1,
+        self.model.soma.ghbar_hb1 = tuple(params)
+
+    def setIsegParams(self, params: list):
+        assert (len(params)==5)
+        self.model.iseg.g_pas,  # 1/225
+        self.model.iseg.ghbar_hb1,  # 0.001/7
+        self.model.iseg.gnabar_NafIsb1,  # 1.33
+        self.model.iseg.gnapbar_NapIsb1,  # 3.2971e-5
+        self.model.iseg.gkbar_KdrIsb1 = tuple(params)  # 0.16552
+
+    def setDend1Params(self, params: list):
+        assert (len(params)==2)
+        self.model.dendrites[0].g_pas,  # 1/11000
+        self.model.dendrites[0].ghbar_hb1 = tuple(params)  # 0.002/7
+
+    def setDend2Params(self, params: list):
+        assert (len(params)==3)
+        self.model.dendrites[1].g_pas,  # 1/11000
+        self.model.dendrites[1].ghbar_hb1,  # 0.002/7
+        self.model.dendrites[1].gcaLlvabar_Llvab1 = tuple(params)   # 0.00016
+
+    def setDend2Params(self, params: list):
+        assert (len(params)==2)
+        self.model.dendrites[2].g_pas,  # 1/11000
+        self.model.dendrites[2].ghbar_hb1 = tuple(params)   # 0.002/7
 
     def somaParams(self):
-
         print(self.model.soma.g_pas)
         print(self.model.soma.gnabar_NafSmb1)
         print(self.model.soma.gkdrbar_KdrSmb1)
@@ -652,7 +691,6 @@ class FiveCompModel():
         print(h.nexp_CaSmb1)  # 1
         print(h.f_CaSmb1)  # 0.001
         print(h.alpha_CaSmb1)  # 1
-
         print(h.th_NafSmb1)
         print(h.amA_NafSmb1)
         print(h.bmA_NafSmb1)
@@ -665,7 +703,6 @@ class FiveCompModel():
 
 ########################################################################
 ########################################################################
-
 
     def get_exprimental_data(self):
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
@@ -836,10 +873,15 @@ if __name__ == '__main__':
 
         # wb.save('measurements.xls')
 
-    start_time = time.time()
-    testRun(plotting=True, printing=True, save_to_file=False)
-    print("Measurements are done in--- %s seconds ---" %
-          (time.time() - start_time))
+    # start_time = time.time()
+    # testRun(plotting=True, printing=True, save_to_file=False)
+    # print("Measurements are done in--- %s seconds ---" %
+    #       (time.time() - start_time))
 
-    # model = FiveCompModel()
-    # model.somaParams()
+    model = FiveCompModel()
+    # print(model.model.cell.soma_dends_resistance_ratio)
+    # model.model.cell.global_conductance = 1/400
+    print(model.dendrites[1].ghbar_hb1)
+    # print(model.model.cell.dend1.g_pas)
+    # print(model.model.cell.dend2.g_pas)
+    # print(model.model.cell.dend3.g_pas)

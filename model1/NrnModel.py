@@ -17,6 +17,7 @@ class NrnModel():
         self.cell = None
         self.soma = None
         self.iseg = None
+        self.dendrites = []
 
         self.singleCellRun(cellTemplateFile)
 
@@ -37,6 +38,7 @@ class NrnModel():
         self.cell = h.fivecompMy()
         self.soma = self.cell.soma
         self.iseg = self.cell.iseg
+        self.dendrites = [self.cell.dend1, self.cell.dend2, self.cell.dend3]
 
         # return cell,soma
 
