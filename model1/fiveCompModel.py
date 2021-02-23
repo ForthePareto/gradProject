@@ -631,54 +631,69 @@ class FiveCompModel():
 ##################  Parameter setters,getters        ###################
 ##################                                   ###################
 ########################################################################
+    # np_soma = 7
+    # np_iseg = 4
+    # np_dend1 = 1
+    # np_dend2 = 2
+    # np_dend3 = 1
+
 
     def setCellParams(self, params: list):
-        assert (len(params)==7)
-        self.model.soma.g_pas,
-        self.model.soma.gnabar_NafSmb1,
-        self.model.soma.gkdrbar_KdrSmb1,
-        self.model.soma.gkcabar_CaSmb1,
-        self.model.soma.gcanbar_CaSmb1,
-        self.model.soma.gcalbar_CaSmb1,
-        self.model.soma.ghbar_hb1 = tuple(params)
+        # because gpas is proportinal in all segments dends = g_soma*(1/48)
+        self.g_pas = params[0]
+        self.setSomaParams(params[0:7])
+        self.setIsegParams(params[7:11])
+        self.setDend1Params(params[11:12])
+        self.setDend2Params(params[12:14])
+        self.setDend3Params(params[14:])
 
     def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
         #     h.kd_CaSmb1, h.nexp_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
         #     h.thetamn_CaSmb1, h.thetahn_CaSmb1, h.kca_CaSmb1 = tuple(
         #         params)
-        assert (len(params)==7)
-        self.model.soma.g_pas,
-        self.model.soma.gnabar_NafSmb1,
-        self.model.soma.gkdrbar_KdrSmb1,
-        self.model.soma.gkcabar_CaSmb1,
-        self.model.soma.gcanbar_CaSmb1,
-        self.model.soma.gcalbar_CaSmb1,
-        self.model.soma.ghbar_hb1 = tuple(params)
+        assert (len(params) == 7)
+        self.model.soma.g_pas,\
+            self.model.soma.gnabar_NafSmb1,\
+            self.model.soma.gkdrbar_KdrSmb1,\
+            self.model.soma.gkcabar_CaSmb1,\
+            self.model.soma.gcanbar_CaSmb1,\
+            self.model.soma.gcalbar_CaSmb1,\
+            self.model.soma.ghbar_hb1 = tuple(params)
 
     def setIsegParams(self, params: list):
-        assert (len(params)==5)
-        self.model.iseg.g_pas,  # 1/225
-        self.model.iseg.ghbar_hb1,  # 0.001/7
-        self.model.iseg.gnabar_NafIsb1,  # 1.33
-        self.model.iseg.gnapbar_NapIsb1,  # 3.2971e-5
-        self.model.iseg.gkbar_KdrIsb1 = tuple(params)  # 0.16552
+        assert (len(params) == 4)
+        # 1/225
+        # 0.001/7
+        # 1.33
+        # 3.2971e-5
+        # 0.16552
+        self.model.iseg.g_pas = self.g_pas
+        self.model.iseg.ghbar_hb1, \
+            self.model.iseg.gnabar_NafIsb1, \
+            self.model.iseg.gnapbar_NapIsb1, \
+            self.model.iseg.gkbar_KdrIsb1 = tuple(params)
 
     def setDend1Params(self, params: list):
-        assert (len(params)==2)
-        self.model.dendrites[0].g_pas,  # 1/11000
-        self.model.dendrites[0].ghbar_hb1 = tuple(params)  # 0.002/7
+        assert (len(params) == 1)
+        # 1/11000
+        # 0.002/7
+        self.model.dendrites[0].g_pas = self.g_pas / 48.9
+        self.model.dendrites[0].ghbar_hb1 = params[0]
 
     def setDend2Params(self, params: list):
-        assert (len(params)==3)
-        self.model.dendrites[1].g_pas,  # 1/11000
-        self.model.dendrites[1].ghbar_hb1,  # 0.002/7
-        self.model.dendrites[1].gcaLlvabar_Llvab1 = tuple(params)   # 0.00016
+        # 1/11000
+        # 0.002/7
+        # 0.00016
+        assert (len(params) == 2)
+        self.model.dendrites[1].g_pas = self.g_pas / 48.9
+        self.model.dendrites[1].ghbar_hb1, \
+        self.model.dendrites[1].gcaLlvabar_Llvab1 = tuple(params)
 
-    def setDend2Params(self, params: list):
-        assert (len(params)==2)
-        self.model.dendrites[2].g_pas,  # 1/11000
-        self.model.dendrites[2].ghbar_hb1 = tuple(params)   # 0.002/7
+    def setDend3Params(self, params: list):
+        assert (len(params) == 1)
+        self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
+        self.model.dendrites[2].ghbar_hb1 = params[0]      # 0.002/7
 
     def somaParams(self):
         print(self.model.soma.g_pas)
@@ -713,10 +728,10 @@ class FiveCompModel():
         return self.EXPRIMENTAL_DATA[:, 1].astype(np.float)
 
     def get_parameters_boundaries(self):
-        boundaries = np.array([[0, 1]]*6)
+        # boundaries = np.array([[0, 1]]*6)
         # boundaries = np.array([[0, 1]]*12)
-        # boundaries = np.concatenate(
-        #     (np.array([[0, 1.1]]*10), np.array([[4, 70]]*8)))
+        boundaries = np.concatenate(
+            (np.array([[0, 1]]*8), np.array([[0, 1.7]]), np.array([[0, 1]]*6)))
         return boundaries
 
     def get_measurements(self):
@@ -881,7 +896,9 @@ if __name__ == '__main__':
     model = FiveCompModel()
     # print(model.model.cell.soma_dends_resistance_ratio)
     # model.model.cell.global_conductance = 1/400
-    print(model.dendrites[1].ghbar_hb1)
+    model.model.soma.g_pas = 69
+    model.dendrites[1].g_pas = model.model.soma.g_pas
+    print(model.dendrites[1].g_pas)
     # print(model.model.cell.dend1.g_pas)
     # print(model.model.cell.dend2.g_pas)
     # print(model.model.cell.dend3.g_pas)

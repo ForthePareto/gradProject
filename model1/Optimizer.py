@@ -18,15 +18,19 @@ class ModelOptimizer:
         #passing a solution of parameters to the cell model
         # print(params.shape)
         # print(params)
-        try:
-            self.model.setCellParams(params) 
-            #getting measurement of model after parameter modification to be evaluated
-            measurements = self.model.get_measurements() 
-            # norm_cost = np.linalg.norm(self.experimental_data - measurements)
-            norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
-        except (IndexError , ValueError):
-            norm_cost= 100000
-        
+        # try:
+        #     self.model.setCellParams(params) 
+        #     #getting measurement of model after parameter modification to be evaluated
+        #     measurements = self.model.get_measurements() 
+        #     # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+        #     norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
+        # except (IndexError , ValueError):
+        #     norm_cost= 100000
+        self.model.setCellParams(params) 
+        #getting measurement of model after parameter modification to be evaluated
+        measurements = self.model.get_measurements() 
+        # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+        norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
         # norm_cost = np.linalg.norm(self.experimental_data - measurements)
         
         # print(norm_cost)
@@ -34,14 +38,14 @@ class ModelOptimizer:
 
     def optimize(self):
         algorithm_param = {'max_num_iteration': None,  
-                   'population_size':50,\
+                   'population_size':100,\
                    'mutation_probability':0.1,\
-                   'elit_ratio': 0.01,\
+                   'elit_ratio': 0.2,\
                    'crossover_probability': 0.5,\
                    'parents_portion': 0.3,\
                    'crossover_type':'uniform',\
                    'max_iteration_without_improv':None} 
-        vartype = np.array([['real']]*6)
+        vartype = np.array([['real']]*15)
         # vartype = np.array([['int']]*12)
         # vartype =np.concatenate(
         #     (np.array([['real']]*10), np.array([['int']]*8)))
