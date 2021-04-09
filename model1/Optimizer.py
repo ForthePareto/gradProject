@@ -16,42 +16,55 @@ class ModelOptimizer:
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
         #passing a solution of parameters to the cell model
-        # print(params.shape)
-        # print(params)
-        # try:
-        #     self.model.setCellParams(params) 
-        #     #getting measurement of model after parameter modification to be evaluated
-        #     measurements = self.model.get_measurements() 
-        #     # norm_cost = np.linalg.norm(self.experimental_data - measurements)
-        #     norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
-        # except (IndexError , ValueError):
-        #     norm_cost= 100000
-        self.model.setCellParams(params) 
-        #getting measurement of model after parameter modification to be evaluated
-        measurements = self.model.get_measurements() 
-        # norm_cost = np.linalg.norm(self.experimental_data - measurements)
-        norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
+        print(params.shape)
+        print(params)
+        try:
+            self.model.setCellParams(params) 
+            #getting measurement of model after parameter modification to be evaluated
+            measurements = self.model.get_measurements() 
+            # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+            norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
+        except (IndexError , ValueError):
+            norm_cost= 100000
+        # self.model.setCellParams(params) 
+        # #getting measurement of model after parameter modification to be evaluated
+        # measurements = self.model.get_measurements() 
+        # # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+        # norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
         # norm_cost = np.linalg.norm(self.experimental_data - measurements)
         
         # print(norm_cost)
         return norm_cost
 
-    def optimize(self):
-        algorithm_param = {'max_num_iteration': None,  
-                   'population_size':100,\
-                   'mutation_probability':0.1,\
-                   'elit_ratio': 0.2,\
+    def single_cost(self, params):
+        try:
+            self.model.setCellParams(params) 
+            #getting measurement of model after parameter modification to be evaluated
+            measurements = self.model.get_single_measurement(measurement="AP height")
+            norm_cost = abs(self.experimental_data[1] - measurements)
+             
+        except (IndexError , ValueError):
+            norm_cost= 100000
+        print(norm_cost)
+        return norm_cost
+
+
+    def optimize(self):#try elite ratio == 0.05
+        algorithm_param = {'max_num_iteration': 150,  
+                   'population_size':50,\
+                   'mutation_probability':0.35,\
+                   'elit_ratio': 0.2,\ 
                    'crossover_probability': 0.5,\
                    'parents_portion': 0.3,\
                    'crossover_type':'uniform',\
-                   'max_iteration_without_improv':None} 
+                   'max_iteration_without_improv':30} 
         vartype = np.array([['real']]*15)
         # vartype = np.array([['int']]*12)
         # vartype =np.concatenate(
         #     (np.array([['real']]*10), np.array([['int']]*8)))
 
         
-        GA_Optizimer = ga(function=self.cost,algorithm_parameters=algorithm_param, dimension=len(self.parameters_boundaries),
+        GA_Optizimer = ga(function=self.single_cost,algorithm_parameters=algorithm_param, dimension=len(self.parameters_boundaries),
         variable_type_mixed=vartype, variable_boundaries=self.parameters_boundaries,function_timeout=40, convergence_curve=True)
         GA_Optizimer.run()
         self.best_solution = GA_Optizimer.best_variable
@@ -65,4 +78,4 @@ if __name__ == '__main__':
     # cell_model.setCellParams(np.random.rand(18,1))
     # cell_model.get_measurements()
     optimizer = ModelOptimizer(cell_model)
-    optimizer.optimize()
+    # optimizer.optimize()

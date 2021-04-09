@@ -767,8 +767,18 @@ class FiveCompModel():
             Level.VLOW, 1, plotting=False, printing=False)
         self.measurements = np.array([rIn, APHeight, APWidth, AHPDepth, AHPDuration,
                                       AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
-        print("\n Measurements: ", self.measurements)
+        
         return self.measurements
+    def get_single_measurement(self,measurement="AP height"):
+        delay = 150
+        duration = 1
+        current = 21
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        if measurement == "AP height":
+            APHeight, rest, peak = self.APHeight(
+                volt, t, delay, duration, plotting=False, printing=False)
+            return APHeight
 
 
 if __name__ == '__main__':
@@ -794,6 +804,10 @@ if __name__ == '__main__':
 
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
         modelRun = FiveCompModel()
+        solution = [0.06153109 ,0.99095446, 0.2489409,  0.00616998, 0.22588292, 0.06148689,
+                    0.00486156 ,0.04851038, 1.4022535 , 0.24232784 ,0.1652881  ,0.03059291,
+                    0.93859842 ,0.04245916, 0.47526081]
+        modelRun.setCellParams(solution) 
         # modelRun.somaParams()
         # modelRun.setCellParams(np.ones(18))
         rIn = modelRun.inputResistance(-0.5,
@@ -889,16 +903,20 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     # start_time = time.time()
-    # testRun(plotting=True, printing=True, save_to_file=False)
+    testRun(plotting=True, printing=True, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
 
-    model = FiveCompModel()
+    # model = FiveCompModel()
+    # solution = [0.06153109 ,0.99095446, 0.2489409,  0.00616998, 0.22588292, 0.06148689,
+    #                 0.00486156 ,0.04851038, 1.4022535 , 0.24232784 ,0.1652881  ,0.03059291,
+    #                 0.93859842 ,0.04245916, 0.47526081]
+    # model.setCellParams(params) 
     # print(model.model.cell.soma_dends_resistance_ratio)
     # model.model.cell.global_conductance = 1/400
-    model.model.soma.g_pas = 69
-    model.dendrites[1].g_pas = model.model.soma.g_pas
-    print(model.dendrites[1].g_pas)
+    # model.model.soma.g_pas = 69
+    # model.dendrites[1].g_pas = model.model.soma.g_pas
+    # print(model.dendrites[1].g_pas)
     # print(model.model.cell.dend1.g_pas)
     # print(model.model.cell.dend2.g_pas)
     # print(model.model.cell.dend3.g_pas)
