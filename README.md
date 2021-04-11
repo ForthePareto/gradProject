@@ -6,7 +6,7 @@ Optimization of neuron models using RL graduation project
 ## To-do
    -  ***URGENT*** Add Logging.
    -  ***URGENT*** Add the support for more optimizers.
-   - Generalize `NrnModel` class to support any neuron model.
+   - Generalize `FiveCompModel()` class to support any neuron model.
    -  Develop the project's GUI.
 
 ---
