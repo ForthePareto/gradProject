@@ -1,6 +1,15 @@
 # gradProject
 Optimization of neuron models using RL graduation project
 
+---
+
+## To-do
+   -  ***URGENT*** Add Logging.
+   -  ***URGENT*** Add the support for more optimizers.
+   - Generalize `NrnModel` class to support any neuron model.
+   -  Develop the project's GUI.
+
+---
 
 ## Meetings 
 1. meeting 1 : 16 Nov 2020 :<
@@ -14,6 +23,7 @@ Optimization of neuron models using RL graduation project
 ## Recorded Meetings
    - All recoded meetings are [HERE](https://www.mediafire.com/folder/pm73im0rhejr3/GP_meetings_2020)
 
+---
 
 ## Books 
 "Here are three books for you, but again I only recommend using them as a reference not for study": 

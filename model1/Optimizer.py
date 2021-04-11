@@ -2,10 +2,37 @@ import numpy as np
 from geneticalgorithm import geneticalgorithm as ga
 # docs: https://pypi.org/project/geneticalgorithm/
 from fiveCompModel import FiveCompModel
+import logging
+
+print(__name__)
+
+# create logger
+module_logger = logging.getLogger(__name__)
+
+# create file handler
+fh = logging.FileHandler('log.log')
+fh.setLevel(logging.INFO)
+
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+# add the handlers to the logger
+module_logger.addHandler(fh)
+module_logger.addHandler(ch)
 
 
 class ModelOptimizer:
     def __init__(self, model):
+        print(__name__)
+        self.logger = logging.getLogger('ModelOptimizer')
+        self.logger.info('creating an instance of ModelOptimizer')
+
         self.model = model
         self.experimental_data = model.get_exprimental_data() #done
         self.parameters_boundaries = model.get_parameters_boundaries() #done
