@@ -648,7 +648,6 @@ class FiveCompModel():
         self.setDend2Params(params[12:14])
         self.setDend3Params(params[14:])
 
-
     def setPassiveParams(self, params: list):
         """
         set passive conductance to all compartments
@@ -659,8 +658,6 @@ class FiveCompModel():
         self.model.dendrites[0].g_pas = self.g_pas / 48.9
         self.model.dendrites[1].g_pas = self.g_pas / 48.9
         self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
-
-
 
     def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
@@ -755,7 +752,7 @@ class FiveCompModel():
         current = 21
         rIn = self.inputResistance(-0.5,
                                    plotting=False, printing=False)
-        time_constant = self.timeConstant(-0.5, plotting=False, printing=False)
+        # time_constant = self.timeConstant(-0.5, plotting=False, printing=False)
         volt, t = self.stimulateCell(
             current, duration, delay, self.iseg, 0.5, 500)
         APHeight, rest, peak = self.APHeight(
@@ -782,8 +779,8 @@ class FiveCompModel():
         Rheobase = self.Rheobase(
             Level.VLOW, 1, plotting=False, printing=False)
         self.measurements = np.array([rIn, APHeight, APWidth, AHPDepth, AHPDuration,
-                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase, time_constant]).astype(np.float)
-        print("\n Measurements: ", self.measurements)
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase, 5]).astype(np.float)
+        # print("\n Measurements: ", self.measurements)
         return self.measurements
 
     def get_passive_measurements(self, current_amplitude=-0.5):
@@ -793,6 +790,72 @@ class FiveCompModel():
             current_amplitude, plotting=False, printing=False)
         passive_measurements = np.array([rIn, time_constant]).astype(np.float)
         return passive_measurements
+
+    def get_non_passive_measurements(self, current_amplitude=-0.5):
+        delay = 150
+        duration = 1
+        current = 21
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        APHeight, rest, peak = self.APHeight(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        APWidth = self.APWidth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDepth = self.AHPDepth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDuration = self.AHPDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDuration = self.AHPHalfDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDecay = self.AHPHalfDecay(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPRisingTime = self.AHPRisingTime(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        Rheobase = self.Rheobase(
+            Level.VLOW, 1, plotting=False, printing=False)
+        self.measurements = np.array([APHeight, APWidth, AHPDepth, AHPDuration,
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
+        # print("\n Measurements: ", self.measurements)
+        return self.measurements
+
+    def get_AP_measurements(self, current_amplitude=-0.5):
+        delay = 150
+        duration = 1
+        current = 21
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        APHeight, rest, peak = self.APHeight(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        APWidth = self.APWidth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDepth = self.AHPDepth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDuration = self.AHPDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDuration = self.AHPHalfDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDecay = self.AHPHalfDecay(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPRisingTime = self.AHPRisingTime(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        self.measurements = np.array([APHeight, APWidth, AHPDepth, AHPDuration,
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime]).astype(np.float)
+        # print("\n Measurements: ", self.measurements)
+        return self.measurements
 
 
 if __name__ == '__main__':
