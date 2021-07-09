@@ -11,7 +11,7 @@ PRINTING = False
 
 
 class FiveCompModel():
-    def __init__(self,):
+    def __init__(self):
 
         self.model = NrnModel("5CompMy_temp.hoc")
         self.soma = self.model.soma
@@ -36,7 +36,7 @@ class FiveCompModel():
         # self.xlSheetInit()
 
     def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
-        """ Stimulate the cell at the desired properties
+        """ Stimulate the cell with the supplied properties
             Args:
             :param clampAmp: the current value at which the cell is stimulated (in nA)
             :param duration: the time for which the stimulation is continued
@@ -976,16 +976,16 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     # start_time = time.time()
-    # testRun(plotting=True, printing=True, save_to_file=False)
+    testRun(plotting=True, printing=True, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
 
-    model = FiveCompModel()
-    # print(model.model.cell.soma_dends_resistance_ratio)
-    # model.model.cell.global_conductance = 1/400
-    model.model.soma.g_pas = 69
-    model.dendrites[1].g_pas = model.model.soma.g_pas
-    print(model.dendrites[1].g_pas)
-    # print(model.model.cell.dend1.g_pas)
-    # print(model.model.cell.dend2.g_pas)
-    # print(model.model.cell.dend3.g_pas)
+    # model = FiveCompModel()
+    # # print(model.model.cell.soma_dends_resistance_ratio)
+    # # model.model.cell.global_conductance = 1/400
+    # model.model.soma.g_pas = 69
+    # model.dendrites[1].g_pas = model.model.soma.g_pas
+    # print(model.dendrites[1].g_pas)
+    # # print(model.model.cell.dend1.g_pas)
+    # # print(model.model.cell.dend2.g_pas)
+    # # print(model.model.cell.dend3.g_pas)
