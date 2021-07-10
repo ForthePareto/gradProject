@@ -13,6 +13,7 @@ import Selector
 from fiveCompModel import FiveCompModel
 from algorithms import eaAlphaMuPlusLambdaCheckpoint, WSListIndividual
 np.random.seed(1)
+from datetime import datetime
 
 
 class Nsga2Optimizer:
@@ -202,7 +203,12 @@ def uniform(lower_list, upper_list, dimensions):
 
 if __name__ == '__main__':
     cell_model = FiveCompModel()
+    
+    print("start Time =",  datetime.now().strftime("%H:%M:%S"))
     optimizer = Nsga2Optimizer(cell_model)
     pop, logbook = optimizer.optimize(
         population_size=100, offspring_size=100, n_generations=50)
     print(pop)
+    print(logbook)
+    print("end Time =",  datetime.now().strftime("%H:%M:%S"))
+
