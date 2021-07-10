@@ -1,7 +1,13 @@
+from sbi.inference.base import infer
+import torch
+from sbi import utils as utils
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from geneticalgorithm import geneticalgorithm as ga
 # docs: https://pypi.org/project/geneticalgorithm/
 from fiveCompModel import FiveCompModel
+
 import logging
 
 
@@ -31,10 +37,6 @@ module_logger.addHandler(ch)
 
 class ModelOptimizer:
     def __init__(self, model):
-        print(__name__)
-        self.logger = logging.getLogger('ModelOptimizer')
-        self.logger.info('creating an instance of ModelOptimizer')
-
         self.model = model
         self.experimental_data = model.get_exprimental_data()  # done
         self.parameters_boundaries = model.get_parameters_boundaries()  # done
@@ -45,23 +47,17 @@ class ModelOptimizer:
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
         # passing a solution of parameters to the cell model
-        # print(params.shape)
-        # print(params)
-        # try:
-        #     self.model.setCellParams(params)
-        #     #getting measurement of model after parameter modification to be evaluated
-        #     measurements = self.model.get_measurements()
-        #     # norm_cost = np.linalg.norm(self.experimental_data - measurements)
-        #     norm_cost = np.linalg.norm(np.divide((self.experimental_data - measurements),np.abs(self.experimental_data)))
-        # except (IndexError , ValueError):
-        #     norm_cost= 100000
-        self.model.setCellParams(params)
-        # getting measurement of model after parameter modification to be evaluated
-        measurements = self.model.get_measurements()
-        # norm_cost = np.linalg.norm(self.experimental_data - measurements)
-        norm_cost = np.linalg.norm(np.divide(
-            (self.experimental_data - measurements), np.abs(self.experimental_data)))
-        # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+
+        try:
+            self.model.setCellParams(params)
+            # getting measurement of model after parameter modification to be evaluated
+            measurements = self.model.get_measurements()
+            # norm_cost = np.linalg.norm(self.experimental_data - measurements)
+            norm_cost = np.linalg.norm(np.divide(
+                (self.experimental_data - measurements), np.abs(self.experimental_data)))
+        except (IndexError, ValueError):
+            norm_cost = 100000
+
 
         # print(norm_cost)
         return norm_cost
@@ -86,7 +82,6 @@ class ModelOptimizer:
         self.best_solution = GA_Optizimer.best_variable
         self.best_score = GA_Optizimer.best_function
 
-
 if __name__ == '__main__':
     cell_model = FiveCompModel()
     # cell_model.setCellParams(np.random.rand(18,1))
@@ -95,3 +90,4 @@ if __name__ == '__main__':
     # cell_model.get_measurements()
     optimizer = ModelOptimizer(cell_model)
     optimizer.optimize()
+   
