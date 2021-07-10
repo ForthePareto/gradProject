@@ -8,6 +8,32 @@ from geneticalgorithm import geneticalgorithm as ga
 # docs: https://pypi.org/project/geneticalgorithm/
 from fiveCompModel import FiveCompModel
 
+import logging
+
+
+print(__name__)
+
+# create logger
+module_logger = logging.getLogger(__name__)
+
+# create file handler
+fh = logging.FileHandler('log.log')
+fh.setLevel(logging.INFO)
+
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+# add the handlers to the logger
+module_logger.addHandler(fh)
+module_logger.addHandler(ch)
+
 
 class ModelOptimizer:
     def __init__(self, model):
@@ -21,6 +47,7 @@ class ModelOptimizer:
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
         # passing a solution of parameters to the cell model
+
         try:
             self.model.setCellParams(params)
             # getting measurement of model after parameter modification to be evaluated
@@ -30,6 +57,7 @@ class ModelOptimizer:
                 (self.experimental_data - measurements), np.abs(self.experimental_data)))
         except (IndexError, ValueError):
             norm_cost = 100000
+
 
         # print(norm_cost)
         return norm_cost

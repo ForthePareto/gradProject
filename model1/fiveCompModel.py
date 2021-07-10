@@ -11,7 +11,7 @@ PRINTING = False
 
 
 class FiveCompModel():
-    def __init__(self,):
+    def __init__(self):
 
         self.model = NrnModel("5CompMy_temp.hoc")
         self.soma = self.model.soma
@@ -25,7 +25,8 @@ class FiveCompModel():
                                           ["AHP Half-Duration", 36.82],
                                           ["AHP Half-Decay", 26.75],
                                           ["AHP Rising-Time", 11.27],
-                                          ["Rheobase", 7.88]])
+                                          ["Rheobase", 7.88],
+                                          ["time constant", 6.25]])
         self.measurements = np.zeros((9))
 
         # self.Parmeters_boundaries = {"conductance": [0, 1]}
@@ -35,7 +36,7 @@ class FiveCompModel():
         # self.xlSheetInit()
 
     def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
-        """ Stimulate the cell at the desired properties
+        """ Stimulate the cell with the supplied properties
             Args:
             :param clampAmp: the current value at which the cell is stimulated (in nA)
             :param duration: the time for which the stimulation is continued
@@ -647,6 +648,17 @@ class FiveCompModel():
         self.setDend2Params(params[12:14])
         self.setDend3Params(params[14:])
 
+    def setPassiveParams(self, params: list):
+        """
+        set passive conductance to all compartments
+        """
+        self.g_pas = params[0]
+        self.model.soma.g_pas = self.g_pas
+        self.model.iseg.g_pas = self.g_pas
+        self.model.dendrites[0].g_pas = self.g_pas / 48.9
+        self.model.dendrites[1].g_pas = self.g_pas / 48.9
+        self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
+
     def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
         #     h.kd_CaSmb1, h.nexp_CaSmb1, h.f_CaSmb1, h.alpha_CaSmb1, h.th_NafSmb1, h.amA_NafSmb1, h.bmA_NafSmb1, h.theta_h_NafSmb1, h.theta_n_KdrSmb1, \
@@ -688,7 +700,7 @@ class FiveCompModel():
         assert (len(params) == 2)
         self.model.dendrites[1].g_pas = self.g_pas / 48.9
         self.model.dendrites[1].ghbar_hb1, \
-        self.model.dendrites[1].gcaLlvabar_Llvab1 = tuple(params)
+            self.model.dendrites[1].gcaLlvabar_Llvab1 = tuple(params)
 
     def setDend3Params(self, params: list):
         assert (len(params) == 1)
@@ -734,12 +746,13 @@ class FiveCompModel():
             (np.array([[0, 1]]*8), np.array([[0, 1.7]]), np.array([[0, 1]]*6)))
         return boundaries
 
-    def get_measurements(self):
+    def get_measurements(self, delay=150, duration=1, current=21):
         delay = 150
         duration = 1
         current = 21
         rIn = self.inputResistance(-0.5,
                                    plotting=False, printing=False)
+        # time_constant = self.timeConstant(-0.5, plotting=False, printing=False)
         volt, t = self.stimulateCell(
             current, duration, delay, self.iseg, 0.5, 500)
         APHeight, rest, peak = self.APHeight(
@@ -766,8 +779,82 @@ class FiveCompModel():
         Rheobase = self.Rheobase(
             Level.VLOW, 1, plotting=False, printing=False)
         self.measurements = np.array([rIn, APHeight, APWidth, AHPDepth, AHPDuration,
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase, 5]).astype(np.float)
+        # print("\n Measurements: ", self.measurements)
+        return self.measurements
+
+    def get_passive_measurements(self, current_amplitude=-0.5):
+        rIn = self.inputResistance(current_amplitude,
+                                   plotting=False, printing=False)
+        time_constant = self.timeConstant(
+            current_amplitude, plotting=False, printing=False)
+        passive_measurements = np.array([rIn, time_constant]).astype(np.float)
+        return passive_measurements
+
+    def get_non_passive_measurements(self, current_amplitude=-0.5):
+        delay = 150
+        duration = 1
+        current = 21
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        APHeight, rest, peak = self.APHeight(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        APWidth = self.APWidth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDepth = self.AHPDepth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDuration = self.AHPDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDuration = self.AHPHalfDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDecay = self.AHPHalfDecay(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPRisingTime = self.AHPRisingTime(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        Rheobase = self.Rheobase(
+            Level.VLOW, 1, plotting=False, printing=False)
+        self.measurements = np.array([APHeight, APWidth, AHPDepth, AHPDuration,
                                       AHPHalfDuration, AHPHalfDecay, AHPRisingTime, Rheobase]).astype(np.float)
-        print("\n Measurements: ", self.measurements)
+        # print("\n Measurements: ", self.measurements)
+        return self.measurements
+
+    def get_AP_measurements(self, current_amplitude=-0.5):
+        delay = 150
+        duration = 1
+        current = 21
+        volt, t = self.stimulateCell(
+            current, duration, delay, self.iseg, 0.5, 500)
+        APHeight, rest, peak = self.APHeight(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        APWidth = self.APWidth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDepth = self.AHPDepth(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPDuration = self.AHPDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDuration = self.AHPHalfDuration(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPHalfDecay = self.AHPHalfDecay(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        AHPRisingTime = self.AHPRisingTime(
+            volt, t, delay, duration, plotting=False, printing=False)
+
+        self.measurements = np.array([APHeight, APWidth, AHPDepth, AHPDuration,
+                                      AHPHalfDuration, AHPHalfDecay, AHPRisingTime]).astype(np.float)
+        # print("\n Measurements: ", self.measurements)
         return self.measurements
 
 
@@ -803,7 +890,7 @@ if __name__ == '__main__':
         # avgRin = modelRun.avgInRes(
         #     testAmps, plotting=plotting, printing=printing)
 
-        # tau = modelRun.timeConstant(-0.5, plotting=plotting, printing=printing)
+        tau = modelRun.timeConstant(-0.5, plotting=plotting, printing=printing)
 
         delay = 150
         duration = 1
@@ -889,16 +976,16 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     # start_time = time.time()
-    # testRun(plotting=True, printing=True, save_to_file=False)
+    testRun(plotting=True, printing=True, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
 
-    model = FiveCompModel()
-    # print(model.model.cell.soma_dends_resistance_ratio)
-    # model.model.cell.global_conductance = 1/400
-    model.model.soma.g_pas = 69
-    model.dendrites[1].g_pas = model.model.soma.g_pas
-    print(model.dendrites[1].g_pas)
-    # print(model.model.cell.dend1.g_pas)
-    # print(model.model.cell.dend2.g_pas)
-    # print(model.model.cell.dend3.g_pas)
+    # model = FiveCompModel()
+    # # print(model.model.cell.soma_dends_resistance_ratio)
+    # # model.model.cell.global_conductance = 1/400
+    # model.model.soma.g_pas = 69
+    # model.dendrites[1].g_pas = model.model.soma.g_pas
+    # print(model.dendrites[1].g_pas)
+    # # print(model.model.cell.dend1.g_pas)
+    # # print(model.model.cell.dend2.g_pas)
+    # # print(model.model.cell.dend3.g_pas)
