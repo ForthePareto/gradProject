@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from enum import Enum
 
 
+
 class Level(Enum):
     HIGH = 0.5
     MID = 5.0

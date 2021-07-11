@@ -1,9 +1,10 @@
 from NrnModel import NrnModel, Level
 import math
 import numpy as np
-from xlwt import Workbook
+# from xlwt import Workbook
 import time
 from neuron import h
+from exceptions import NoSpikeDetected
 
 
 PLOTTING = False
@@ -178,6 +179,10 @@ class FiveCompModel():
             :return apPeak: the peak potential in milliVolts
 
         """
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0,0,0
         volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
         # get peak point
         vPeak = max(volt)
@@ -202,7 +207,7 @@ class FiveCompModel():
         return apHeight, vRest, vPeak
 
     def APWidth(self, voltVec, timeVec, delay, duration, plotting=PLOTTING, printing=PRINTING):
-        # FIXME: matches aren't aon the same level , but close enough ... (works for me)
+        # FIXME: matches aren't on the same level , but close enough ... (works for me)
         """ measures the AP width of the spike
 
                 :param voltVec: recoreded vector of the spike voltage
@@ -217,8 +222,12 @@ class FiveCompModel():
         """
         # TODO: find the end of the spike with the interval function that will be done later
         # volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
-        volt, time, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, False)
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
+        
+        volt, time, plt = self.patternHighligher(voltVec, timeVec, delay, duration, False)
         apHeight, vRest, vPeak = self.APHeight(
             voltVec, timeVec, delay, duration, False, False)
         # calculate the mid point
@@ -226,6 +235,11 @@ class FiveCompModel():
 
         # find actual matches
         matches = self.closeMatches(volt, apHalfV, 5)
+        # check if no matches found
+        if matches == []:
+            if printing:
+                print("no matches were found!")
+            return 0 # could have retried with a different precesion
         matches = list(zip(*matches))
         # print(f'matches {matches}')
         vMatches = matches[0]
@@ -266,8 +280,12 @@ class FiveCompModel():
         :return AHPDepth:depth of the AHP phase in mV
 
         """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
+
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         AHPStartT = t[0]
@@ -299,9 +317,12 @@ class FiveCompModel():
 
         :return AHPDuration:duration of the AHP phase in mSec
         """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
 
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPStartT = t[0]
 
@@ -334,9 +355,12 @@ class FiveCompModel():
 
         :return AHPHalfDuration:half duration of the AHP phase in mSec
         """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
-
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
+        
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         # print(f'AHPPeakV :{AHPPeakV}')
@@ -344,8 +368,18 @@ class FiveCompModel():
 
         AHPHalfV = ((AHPPeakV - AHPStartV) / 2) + AHPStartV
         # find close matches to the exact value of {AHPHalfV}
-        matches = self.closeMatches(volt, AHPHalfV, 0.05)
+
+        matches = self.closeMatches(volt, AHPHalfV, 0.5)
+        if matches == []:
+            if printing:
+                print("no matches were found!")
+            return 0 # could have retried with a different precesion
+
+        # print(f'\nmatches :{matches}\n')
         matches = list(zip(*matches))
+        # print(f'\nmatches zip: {matches}\n')
+
+        #   TODO: remove print later 
         if printing:
             print(f'AHPHalfV :{AHPHalfV}')
             # print(f'matches {matches}')
@@ -382,9 +416,13 @@ class FiveCompModel():
 
         :return AHPHalfDecay:half decay of the AHP phase in mSec
         """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
-
+        
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
+        
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         AHPPeakT = t[volt.index(AHPPeakV)]
@@ -393,7 +431,12 @@ class FiveCompModel():
         # print(f'AHPHalfV :{AHPHalfV}')
 
         # find close matches to the exact value of {AHPHalfV}
-        matches = self.closeMatches(volt, AHPHalfV, 0.005)
+        matches = self.closeMatches(volt, AHPHalfV, 0.5)
+        if matches == []:
+            if printing:
+                print("no matches were found!")
+            return 0 # could have retried with a different precesion
+
         matches = list(zip(*matches))
         # print(f'matches {matches}')
         matchesV, matchesT = matches
@@ -428,9 +471,14 @@ class FiveCompModel():
 
             :return AHPRisingTime: Rising Time of the AHP phase in mSec
         """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        # check if there's a spike
+        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+            if printing:
+                print("No spike detected")
+            return 0
 
+        
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPStartT = t[0]
 
@@ -468,10 +516,9 @@ class FiveCompModel():
         while refineTimes:
 
             for current in np.arange(start, end, step):
-                volt, t = self.stimulateCell(
-                    current, duration, delay, self.soma, 0.5, 500)
-                if self.isSpike(volt, t, delay, duration, accuracy, plotting=PLOTTING):
 
+                volt, t = self.stimulateCell(current, duration, delay, self.soma, 0.5, 500)
+                if self.isSpike(volt, t, delay, duration, accuracy, plotting=PLOTTING):
                     start = current - step
                     end = current
                     if printing and rheobase_steps:
@@ -481,6 +528,7 @@ class FiveCompModel():
                     break
 
             refineTimes -= 1
+
         rheobase = end
         if printing:
             print(f'rheobase {rheobase} nA')
@@ -546,8 +594,8 @@ class FiveCompModel():
             :return plt: matplotlib class member (graph handler,used to overlay on top old graphs)
 
          """
-        volt, t = self.sliceSpikeGraph(
-            voltVec, timeVec, delay, delay + duration + 70)
+        volt, t = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + duration + 70)
+
         stillUp = True
         stillDown = True
         # if not(reverse):
@@ -616,11 +664,12 @@ class FiveCompModel():
 
         :return bool: true if spike and false otherwise
          """
-        volt, t, plt = self.patternHighligher(
-            voltVec, timeVec, delay, duration,  plotting=plotting)
+        
+        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration,  plotting=plotting)
         if plotting:
             plt.close()
         return (abs(max(volt) - min(volt)) >= accuracy.value)
+
 
 
 ########################################################################
@@ -806,7 +855,7 @@ if __name__ == '__main__':
         tau = modelRun.timeConstant(-0.5, plotting=plotting, printing=printing)
 
         delay = 150
-        duration = 1
+        duration = 80
         current = 21
         volt, t = modelRun.stimulateCell(
             current, duration, delay, modelRun.iseg, 0.5, 500)
