@@ -4,7 +4,6 @@ import numpy as np
 # from xlwt import Workbook
 import time
 from neuron import h
-from exceptions import NoSpikeDetected
 
 
 PLOTTING = False
@@ -12,9 +11,9 @@ PRINTING = False
 
 
 class FiveCompModel():
-    def __init__(self):
+    def __init__(self,modelHocFile:str = "5CompMy_temp.hoc"):
 
-        self.model = NrnModel("5CompMy_temp.hoc")
+        self.model = NrnModel(modelHocFile)
         self.soma = self.model.soma
         self.iseg = self.model.iseg
         self.dendrites = self.model.dendrites
@@ -28,7 +27,7 @@ class FiveCompModel():
                                           ["AHP Rising-Time", 11.27],
                                           ["Rheobase", 7.88]])
         self.measurements = np.zeros((9))
-
+        
         # self.Parmeters_boundaries = {"conductance": [0, 1]}
         # self.xlSheet = None
         # self.row = None
@@ -50,8 +49,7 @@ class FiveCompModel():
         :return t: the recorded time vector
 
          """
-        stim = self.model.setIClamp(
-            delay, duration, clampAmp, segment=stimSeg, position=clampAt)
+        stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
         volt, t = self.model.recordVolt(self.model.soma, 0.5)
         self.model.runControler(TStop=Tstop, init=-65)
 
@@ -843,6 +841,8 @@ if __name__ == '__main__':
 
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
         modelRun = FiveCompModel()
+
+        modelRun.model.getModelParameters()
         # modelRun.somaParams()
         # modelRun.setCellParams(np.ones(18))
         rIn = modelRun.inputResistance(-0.5,
@@ -938,7 +938,7 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     # start_time = time.time()
-    testRun(plotting=True, printing=True, save_to_file=False)
+    testRun(plotting=False, printing=False, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
 
