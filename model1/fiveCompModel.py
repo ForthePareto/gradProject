@@ -28,6 +28,7 @@ class FiveCompModel():
                                           ["Rheobase", 7.88],
                                           ["time constant", 6.25]])
         self.measurements = np.zeros((9))
+        self.trace = {} 
 
         # self.Parmeters_boundaries = {"conductance": [0, 1]}
         # self.xlSheet = None
@@ -638,7 +639,6 @@ class FiveCompModel():
     # np_dend2 = 2
     # np_dend3 = 1
 
-
     def setCellParams(self, params: list):
         # because gpas is proportinal in all segments dends = g_soma*(1/48)
         self.g_pas = params[0]
@@ -658,6 +658,14 @@ class FiveCompModel():
         self.model.dendrites[0].g_pas = self.g_pas / 48.9
         self.model.dendrites[1].g_pas = self.g_pas / 48.9
         self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
+
+    def setNonPassiveParams(self, params: list):
+        self.model.soma.gnabar_NafSmb1,\
+            self.model.soma.gkdrbar_KdrSmb1,\
+            self.model.soma.gkcabar_CaSmb1,\
+            self.model.soma.gcanbar_CaSmb1,\
+            self.model.soma.gcalbar_CaSmb1,\
+            self.model.soma.ghbar_hb1 = tuple(params[0:6])
 
     def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
@@ -730,6 +738,48 @@ class FiveCompModel():
 
 ########################################################################
 ########################################################################
+
+    def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
+        """ Stimulate the cell with the supplied properties
+            Args:
+            :param clampAmp: the current value at which the cell is stimulated (in nA)
+            :param duration: the time for which the stimulation is continued
+            :param delay: the time at which the stimulation is started
+            :param stimSeg: the segment at which the cell is stimulated
+            :param clampAt: the location in the segment at which clamp is inserted
+            :param Tstop: the duration for which the recording is done
+            :param init: the resting membrane voltage of the cell
+
+        :return volt: the recorded voltage vector
+        :return t: the recorded time vector
+
+        """
+        stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
+        volt, t = self.model.recordVolt(self.model.soma, 0.5)
+        self.model.runControler(TStop=Tstop, init=-65)
+        self.volt, self.t = volt, t
+
+        self.trace['T'] = t
+        self.trace['V'] = volt
+        self.trace['stim_start'] = [delay]
+        self.trace['stim_end']  = [delay + duration]
+
+        return volt, t
+
+
+    def get_EFEL_Measurements(self,featureNames:list):
+        traces = [self.trace]
+
+        traces_results = efel.getFeatureValues(traces,featureNames)
+
+        # The return value is a list of trace_results, every trace_results
+        # corresponds to one trace in the 'traces' list above (in same order)
+        for trace_results in traces_results:
+            # trace_result is a dictionary, with as keys the requested eFeatures
+            for feature_name, feature_values in trace_results.items():
+                print("Feature %s has the following values: %s" % \
+                        (feature_name, ', '.join([str(x) for x in feature_values])))
+
 
     def get_exprimental_data(self):
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
@@ -825,32 +875,33 @@ class FiveCompModel():
         # print("\n Measurements: ", self.measurements)
         return self.measurements
 
-    def get_AP_measurements(self, current_amplitude=-0.5):
+    def get_AP_measurements(self, current_amplitude=-0.5,plotting=PLOTTING,printing=PRINTING):
         delay = 150
         duration = 1
         current = 21
         volt, t = self.stimulateCell(
             current, duration, delay, self.iseg, 0.5, 500)
+        self.volt, self.t = volt, t
         APHeight, rest, peak = self.APHeight(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         APWidth = self.APWidth(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         AHPDepth = self.AHPDepth(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         AHPDuration = self.AHPDuration(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         AHPHalfDuration = self.AHPHalfDuration(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         AHPHalfDecay = self.AHPHalfDecay(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         AHPRisingTime = self.AHPRisingTime(
-            volt, t, delay, duration, plotting=False, printing=False)
+            volt, t, delay, duration, plotting=plotting, printing=printing)
 
         self.measurements = np.array([APHeight, APWidth, AHPDepth, AHPDuration,
                                       AHPHalfDuration, AHPHalfDecay, AHPRisingTime]).astype(np.float)
@@ -976,11 +1027,25 @@ if __name__ == '__main__':
         # wb.save('measurements.xls')
 
     # start_time = time.time()
-    testRun(plotting=True, printing=True, save_to_file=False)
+    # testRun(plotting=True, printing=True, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
+    from efelMeasurements import EfelMeasurements
+    import efel
 
-    # model = FiveCompModel()
+    model = FiveCompModel()
+    model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224, 0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
+    delay = 150
+    duration = 1
+    current = 21
+    efel.setDoubleSetting('stimulus_current',current)
+
+    model.stimulateCell(current, duration, delay, model.iseg, 0.5, 500)
+    model.get_EFEL_Measurements(['AP_amplitude','AP1_amp',"AP_height",'AP_width','AHP_depth_abs',"fast_AHP",'AHP_depth',"AHP_time_from_peak",'decay_time_constant_after_stim','ohmic_input_resistance','ohmic_input_resistance_vb_ssse'])
+    
+
+    print("######################### our measurements###################################")
+    model.get_AP_measurements(printing=True,plotting=False)
     # # print(model.model.cell.soma_dends_resistance_ratio)
     # # model.model.cell.global_conductance = 1/400
     # model.model.soma.g_pas = 69
@@ -989,3 +1054,4 @@ if __name__ == '__main__':
     # # print(model.model.cell.dend1.g_pas)
     # # print(model.model.cell.dend2.g_pas)
     # # print(model.model.cell.dend3.g_pas)
+    model.model.graphVolt(model.volt, model.t,"trace").show()

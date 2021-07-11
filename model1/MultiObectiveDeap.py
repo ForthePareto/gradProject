@@ -1,3 +1,4 @@
+from datetime import datetime
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +14,6 @@ import Selector
 from fiveCompModel import FiveCompModel
 from algorithms import eaAlphaMuPlusLambdaCheckpoint, WSListIndividual
 np.random.seed(1)
-from datetime import datetime
 
 
 class Nsga2Optimizer:
@@ -57,12 +57,11 @@ class Nsga2Optimizer:
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
         # passing a solution of parameters to the cell model
-        # print(params.shape)
-        # print(params)
         try:
-            self.model.setCellParams(params)
+            self.model.setNonPassiveParams(params)
             # getting measurement of model after parameter modification to be evaluated
             measurements = self.model.get_AP_measurements()
+            params.measurements = measurements
             # print("measurements.shape", measurements.shape)
             error = np.abs(
                 (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
@@ -70,11 +69,16 @@ class Nsga2Optimizer:
         except (IndexError, ValueError):
             print("Error in measurement")
             error = np.array([1000]*len(self.experimental_data[1:-2]))
+        # error =list(range(1,8))
+        params.measurements_error = error
+        params.total_indivedual_error = sum(list(error))
+
         # self.model.setCellParams(params)
-        # #getting measurement of model after parameter modification to be evaluated
+        # # getting measurement of model after parameter modification to be evaluated
         # measurements = self.model.get_AP_measurements()
         # print(measurements.shape)
-        # error = np.abs((self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
+        # error = np.abs(
+        #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
         return list(error)
 
     def optimize(self, population_size=10, offspring_size=10, n_generations=100, plot=False):
@@ -100,23 +104,18 @@ class Nsga2Optimizer:
         ETA = 10.0
         SELECTOR = "NSGA2"
 
-        IND_SIZE = len(self.parameters_boundaries[:, 0])
+        IND_SIZE = len(self.parameters_boundaries[:, 0][0:6])
 
         # LOWER = [0.0]
         # UPPER = [1.0]
-        LOWER = list(self.parameters_boundaries[:, 0])
-        UPPER = list(self.parameters_boundaries[:, 1])
+        LOWER = list(self.parameters_boundaries[:, 0][0:6])
+        UPPER = list(self.parameters_boundaries[:, 1][0:6])
         OBJ_SIZE = 7
         creator.create("Fitness", base.Fitness, weights=[-1.0] * OBJ_SIZE)
-        creator.create("Individual", list, fitness=creator.Fitness)
+        creator.create("Individual", Individual, fitness=creator.Fitness)
 
         self.toolbox = base.Toolbox()
         self.toolbox.register("uniformparams", uniform, LOWER, UPPER, IND_SIZE)
-        # self.toolbox.register("Individual",
-        #                deap.tools.initIterate,
-        #                functools.partial(WSListIndividual, obj_size=OBJ_SIZE),
-        #                self.toolbox.uniformparams)
-
         self.toolbox.register(
             "Individual",
             tools.initIterate,
@@ -165,6 +164,7 @@ class Nsga2Optimizer:
         fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
         sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
         seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
+        # eighth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
         stats = tools.MultiStatistics(APHeight=first_stats, APWidth=second_stats, AHPDepth=third_stats, AHPDuration=fourth_stats,
                                       AHPHalfDuration=fifth_stats, AHPHalfDecay=sixth_stats, AHPRisingTime=seventh_stats)
         stats.register("min_error", np.min, axis=0)
@@ -186,9 +186,12 @@ class Nsga2Optimizer:
             halloffame=None)
         self.pop, self.logbook = pop, logbook
         return pop, logbook
-
-
-
+class Individual(list):
+    def __init__(self, *args):
+        list.__init__(self, *args)
+        self.measurements = None
+        self.measurements_error = None
+        self.total_indivedual_error = None
 
 def uniform(lower_list, upper_list, dimensions):
     """Fill array from uniform distribution  """
@@ -203,12 +206,26 @@ def uniform(lower_list, upper_list, dimensions):
 
 if __name__ == '__main__':
     cell_model = FiveCompModel()
-    
+
     print("start Time =",  datetime.now().strftime("%H:%M:%S"))
     optimizer = Nsga2Optimizer(cell_model)
+    # optimizer.model.setCellParams([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655])
+    # #getting measurement of model after parameter modification to be evaluated
+    # measurements = optimizer.model.get_AP_measurements()
+    # print(optimizer.ErrorVectorNonPassive([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655]))
     pop, logbook = optimizer.optimize(
-        population_size=100, offspring_size=100, n_generations=50)
-    print(pop)
-    print(logbook)
-    print("end Time =",  datetime.now().strftime("%H:%M:%S"))
-
+        population_size=100, offspring_size=100, n_generations=45)
+    # print(pop)
+    # print(logbook)
+    # i =  0
+    # for ind in pop:
+    #     print(ind)
+    #     print(f"individual {i} Total error =  {ind.total_indivedual_error}" )
+    #     i+=1
+    #     # print(ind.total_indivedual_error)
+    errors = map(lambda ind: ind.total_indivedual_error, pop)
+    best_sol_idx = np.argmin(errors)
+    print("best solution is   ",pop[best_sol_idx], )
+    print("with errors :   ",list( map(lambda ind: ind.measurements_error, pop))[best_sol_idx], )
+    print(f"with total error {list(errors)[best_sol_idx]}")
+    # print("end Time =",  datetime.now().strftime("%H:%M:%S"))
