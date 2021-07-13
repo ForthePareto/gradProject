@@ -2,6 +2,7 @@ from neuron import h
 from neuron.units import ms, mV
 import matplotlib.pyplot as plt
 from enum import Enum
+import pprint
 
 
 class Level(Enum):
@@ -27,9 +28,21 @@ class NrnModel():
         # print('-- Model topology --')
         # print(h.topology())
 
-    def setP(self):
-        h.amA_NafSmb1 = 999
-        print(h.amA_NafSmb1)
+    # def setP(self):
+    #     h.amA_NafSmb1 = 999
+    #     print(h.amA_NafSmb1)
+
+    def getModelParameters(self):
+        topology = self.soma.wholetree()
+        pp = pprint.PrettyPrinter(sort_dicts=False)
+        modelParams = []
+        print(topology)
+        for section in topology:
+            # print(section.psection())
+            modelParams.append(section.psection())
+            # print(type(section.psection()))
+        pp.pprint(modelParams)
+        return modelParams
 
     def singleCellRun(self, cellTemplateFile):
         # loading the cell
