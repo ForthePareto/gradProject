@@ -32,8 +32,8 @@ class EfelMeasurements():
             # self.model.graphVolt(volt, t,"trace").show()
             self.trace['T'] = t
             self.trace['V'] = volt
-            self.trace['stim_start'] = [delay]
-            self.trace['stim_end']  = [delay + duration]
+            self.trace['stim_start'] = [delay-10]
+            self.trace['stim_end']  = [500]
 
             return volt, t
 
@@ -55,13 +55,15 @@ class EfelMeasurements():
 
 
 if __name__ == '__main__':
-        delay = 150
+        delay = 150 #150
         duration = 1
         current =21
         efel.setDoubleSetting('stimulus_current',current)
+        efel.setIntSetting("strict_stiminterval", True)
+
         testEFEL = EfelMeasurements()
         testEFEL.stimulateCell(current, duration, delay, testEFEL.iseg, 0.5, 500)
-        testEFEL.getMeasurements(['AP_amplitude','AP1_amp','AHP_depth_abs','AHP_depth',"AHP_time_from_peak",'AP_width','decay_time_constant_after_stim','ohmic_input_resistance','ohmic_input_resistance_vb_ssse'])
+        testEFEL.getMeasurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
         testEFEL.model.graphVolt(testEFEL.volt, testEFEL.t,"trace").show()
     
 

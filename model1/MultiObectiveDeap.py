@@ -60,15 +60,20 @@ class Nsga2Optimizer:
         try:
             self.model.setNonPassiveParams(params)
             # getting measurement of model after parameter modification to be evaluated
-            measurements = self.model.get_AP_measurements()
+            measurements = self.model.get_EFEL_measurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+            # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
+
             params.measurements = measurements
             # print("measurements.shape", measurements.shape)
             error = np.abs(
-                (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
+                (self.experimental_data - measurements))/np.abs(self.experimental_data)
+            # error = np.abs(
+            #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
             # print("measurements.shape", error.shape)
         except (IndexError, ValueError):
             print("Error in measurement")
-            error = np.array([1000]*len(self.experimental_data[1:-2]))
+            error = np.array([1000]*len(self.experimental_data))
+            # error = np.array([1000]*len(self.experimental_data[1:-2]))
         # error =list(range(1,8))
         params.measurements_error = error
         params.total_indivedual_error = sum(list(error))
@@ -110,7 +115,7 @@ class Nsga2Optimizer:
         # UPPER = [1.0]
         LOWER = list(self.parameters_boundaries[:, 0][0:6])
         UPPER = list(self.parameters_boundaries[:, 1][0:6])
-        OBJ_SIZE = 7
+        OBJ_SIZE = 5
         creator.create("Fitness", base.Fitness, weights=[-1.0] * OBJ_SIZE)
         creator.create("Individual", Individual, fitness=creator.Fitness)
 
@@ -157,16 +162,24 @@ class Nsga2Optimizer:
 
         pop = self.toolbox.population(n=MU)
 
+        # first_stats = tools.Statistics(key=lambda ind: ind.fitness.values[0])
+        # second_stats = tools.Statistics(key=lambda ind: ind.fitness.values[1])
+        # third_stats = tools.Statistics(key=lambda ind: ind.fitness.values[2])
+        # fourth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[3])
+        # fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
+        # sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
+        # seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
+        # # eighth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
+        # stats = tools.MultiStatistics(APHeight=first_stats, APWidth=second_stats, AHPDepth=third_stats, AHPDuration=fourth_stats,
+        #                               AHPHalfDuration=fifth_stats, AHPHalfDecay=sixth_stats, AHPRisingTime=seventh_stats)
+        pop = self.toolbox.population(n=MU)
+
         first_stats = tools.Statistics(key=lambda ind: ind.fitness.values[0])
         second_stats = tools.Statistics(key=lambda ind: ind.fitness.values[1])
         third_stats = tools.Statistics(key=lambda ind: ind.fitness.values[2])
         fourth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[3])
         fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
-        sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
-        seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
-        # eighth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
-        stats = tools.MultiStatistics(APHeight=first_stats, APWidth=second_stats, AHPDepth=third_stats, AHPDuration=fourth_stats,
-                                      AHPHalfDuration=fifth_stats, AHPHalfDecay=sixth_stats, AHPRisingTime=seventh_stats)
+        stats = tools.MultiStatistics(AP_amplitude=first_stats,AP_height=second_stats, APWidth=third_stats, AHP_depth_abs=fourth_stats, AHP_time_from_peak=fifth_stats)
         stats.register("min_error", np.min, axis=0)
 
         # stats = deap.tools.Statistics(key=lambda ind: ind.fitness.values[0])
@@ -214,15 +227,16 @@ if __name__ == '__main__':
     # measurements = optimizer.model.get_AP_measurements()
     # print(optimizer.ErrorVectorNonPassive([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655]))
     pop, logbook = optimizer.optimize(
-        population_size=100, offspring_size=100, n_generations=45)
+        population_size=180, offspring_size=180, n_generations=70)
     # print(pop)
     # print(logbook)
-    # i =  0
-    # for ind in pop:
-    #     print(ind)
-    #     print(f"individual {i} Total error =  {ind.total_indivedual_error}" )
-    #     i+=1
-    #     # print(ind.total_indivedual_error)
+    i =  0
+    pop.sort(key=lambda ind: ind.total_indivedual_error)
+    for ind in pop:
+        print(ind)
+        print(f"individual {i} Total error =  {ind.total_indivedual_error}" )
+        i+=1
+        # print(ind.total_indivedual_error)
     errors = map(lambda ind: ind.total_indivedual_error, pop)
     best_sol_idx = np.argmin(errors)
     print("best solution is   ",pop[best_sol_idx], )

@@ -4,7 +4,8 @@ import numpy as np
 from xlwt import Workbook
 import time
 from neuron import h
-
+from efelMeasurements import EfelMeasurements
+import efel
 
 PLOTTING = False
 PRINTING = False
@@ -27,8 +28,16 @@ class FiveCompModel():
                                           ["AHP Rising-Time", 11.27],
                                           ["Rheobase", 7.88],
                                           ["time constant", 6.25]])
+        # efel data
+        self.EXPRIMENTAL_DATA = np.array(
+            [["AP_amplitude", 80.414],
+             ["AP_height", 14.527],
+                ['AP_width', 0.8],
+                ["AHP_depth_abs", -70.28],
+                ["AHP_time_from_peak", 16.3],
+             ])
         self.measurements = np.zeros((9))
-        self.trace = {} 
+        self.trace = {}
 
         # self.Parmeters_boundaries = {"conductance": [0, 1]}
         # self.xlSheet = None
@@ -739,7 +748,7 @@ class FiveCompModel():
 ########################################################################
 ########################################################################
 
-    def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
+    def stimulate_efel_Cell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
         """ Stimulate the cell with the supplied properties
             Args:
             :param clampAmp: the current value at which the cell is stimulated (in nA)
@@ -754,32 +763,61 @@ class FiveCompModel():
         :return t: the recorded time vector
 
         """
-        stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
+        stim = self.model.setIClamp(
+            delay, duration, clampAmp, segment=stimSeg, position=clampAt)
         volt, t = self.model.recordVolt(self.model.soma, 0.5)
         self.model.runControler(TStop=Tstop, init=-65)
         self.volt, self.t = volt, t
 
         self.trace['T'] = t
         self.trace['V'] = volt
-        self.trace['stim_start'] = [delay]
-        self.trace['stim_end']  = [delay + duration]
-
+        self.trace['stim_start'] = [delay-20]
+        self.trace['stim_end'] = [500]
         return volt, t
 
-
-    def get_EFEL_Measurements(self,featureNames:list):
+    def print_EFEL_Measurements(self, featureNames: list):
         traces = [self.trace]
 
-        traces_results = efel.getFeatureValues(traces,featureNames)
+        traces_results = efel.getFeatureValues(traces, featureNames)
 
         # The return value is a list of trace_results, every trace_results
         # corresponds to one trace in the 'traces' list above (in same order)
         for trace_results in traces_results:
             # trace_result is a dictionary, with as keys the requested eFeatures
             for feature_name, feature_values in trace_results.items():
-                print("Feature %s has the following values: %s" % \
-                        (feature_name, ', '.join([str(x) for x in feature_values])))
+                print("Feature %s has the following values: %s" %
+                      (feature_name, ', '.join([str(x) for x in feature_values])))
 
+    def get_EFEL_measurements(self, featureNames):
+        delay = 150
+        duration = 1
+        current = 21
+        efel.setDoubleSetting('stimulus_current', current)
+        efel.setIntSetting("strict_stiminterval", True)
+        self.stimulate_efel_Cell(
+            current, duration, delay, self.model.iseg, 0.5, 500)
+        traces = [self.trace]
+        check_peaks = efel.getFeatureValues(traces, ["Spikecount_stimint"])
+        if check_peaks[0]["Spikecount_stimint"][0] == 0:
+            return np.zeros(len(featureNames))
+        traces_results = efel.getFeatureValues(traces, featureNames)
+        if traces_results[0]["AP_amplitude"] is None: 
+            # print("efel failed",len(traces_results[0]["AP_amplitude"]) , len(traces_results[0]["AP_height"]))
+            print(f"n spikes are {check_peaks[0]['Spikecount_stimint'][0]}")
+            return np.zeros(len(featureNames))
+        measurements = []
+        for trace_results in traces_results:
+            # trace_result is a dictionary, with as keys the requested eFeatures
+
+            for feature_name, feature_values in trace_results.items():
+
+                if len(feature_values) > 0:
+                    measurements.append(feature_values[0])
+                else:
+                    print(f"{feature_name} failed")
+                    measurements.append(0)
+
+        return np.array(measurements)
 
     def get_exprimental_data(self):
         """get_exprimental_data [A getter for model's experimental data (measurments only without discription)]
@@ -875,7 +913,7 @@ class FiveCompModel():
         # print("\n Measurements: ", self.measurements)
         return self.measurements
 
-    def get_AP_measurements(self, current_amplitude=-0.5,plotting=PLOTTING,printing=PRINTING):
+    def get_AP_measurements(self, current_amplitude=-0.5, plotting=PLOTTING, printing=PRINTING):
         delay = 150
         duration = 1
         current = 21
@@ -1030,22 +1068,35 @@ if __name__ == '__main__':
     # testRun(plotting=True, printing=True, save_to_file=False)
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
-    from efelMeasurements import EfelMeasurements
-    import efel
 
     model = FiveCompModel()
-    model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224, 0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
+    # model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224,
+    #    0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
+    # model.setNonPassiveParams([0.3865326748233099, 0.15095456804461402, 0.01285859938420347, 0.29840635090426376, 0.017506734583927555, 0.7315609248478437])
+    model.setNonPassiveParams([0.8915485852981853, 0.9891505531636227, 0.03785323436596699, 0.12185825476352832, 0.07039571347860495, 0.0702996422573877])
+    model.setNonPassiveParams([0.9571472348218247, 0.8888712322766363, 0.0396973350549424, 0.9718646220118743, 0.05839309301160812, 0.3126811561554764])
     delay = 150
     duration = 1
     current = 21
-    efel.setDoubleSetting('stimulus_current',current)
+    efel.setDoubleSetting('stimulus_current', current)
+    efel.setIntSetting("strict_stiminterval", True)
+    # efel.setDoubleSetting('delay', delay)
 
-    model.stimulateCell(current, duration, delay, model.iseg, 0.5, 500)
-    model.get_EFEL_Measurements(['AP_amplitude','AP1_amp',"AP_height",'AP_width','AHP_depth_abs',"fast_AHP",'AHP_depth',"AHP_time_from_peak",'decay_time_constant_after_stim','ohmic_input_resistance','ohmic_input_resistance_vb_ssse'])
-    
-
+    model.stimulate_efel_Cell(current, duration, delay, model.iseg, 0.5, 500)
+    # model.print_EFEL_Measurements(['AP_amplitude', 'AP1_amp', "AP_height", 'AP_width', "spike_half_width", 'AHP_depth_abs', "fast_AHP", 'AHP_depth',
+    #  "AHP_time_from_peak", "AHP_slow_time", 'decay_time_constant_after_stim', 'ohmic_input_resistance', 'ohmic_input_resistance_vb_ssse'])
+    model.print_EFEL_Measurements(
+        ["AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs',"AHP_depth", "AHP_time_from_peak"])
+    model.EXPRIMENTAL_DATA = np.array(
+        [["AP_amplitude", 80.414],
+         ["AP_height", 14.527],
+         ['AP_width', 0.8],
+         ["AHP_depth_abs", -70.28],
+         ["AHP_time_from_peak", 16.3],
+         ])
+    # print(model.get_EFEL_measurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"]))
     print("######################### our measurements###################################")
-    model.get_AP_measurements(printing=True,plotting=False)
+    # model.get_AP_measurements(printing=True, plotting=False)
     # # print(model.model.cell.soma_dends_resistance_ratio)
     # # model.model.cell.global_conductance = 1/400
     # model.model.soma.g_pas = 69
@@ -1054,4 +1105,4 @@ if __name__ == '__main__':
     # # print(model.model.cell.dend1.g_pas)
     # # print(model.model.cell.dend2.g_pas)
     # # print(model.model.cell.dend3.g_pas)
-    model.model.graphVolt(model.volt, model.t,"trace").show()
+    model.model.graphVolt(model.volt, model.t, "trace").show()
