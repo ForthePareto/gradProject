@@ -2,9 +2,9 @@ from NrnModel import NrnModel
 import efel
 
 class EfelMeasurements():
-    def __init__(self,modelHocFile:str = "5CompMy_temp.hoc"):
+    def __init__(self,model=None,modelHocFile:str = "5CompMy_temp.hoc"    ):
 
-        self.model = NrnModel(modelHocFile)
+        self.model = model  if( model is not None) else NrnModel(modelHocFile)
         self.soma = self.model.soma
         self.iseg = self.model.iseg
         self.trace = {}       
@@ -26,12 +26,14 @@ class EfelMeasurements():
             """
             stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
             volt, t = self.model.recordVolt(self.model.soma, 0.5)
+            self.volt, self.t = volt, t
+
             self.model.runControler(TStop=Tstop, init=-65)
-            
+            # self.model.graphVolt(volt, t,"trace").show()
             self.trace['T'] = t
             self.trace['V'] = volt
-            self.trace['stim_start'] = [delay]
-            self.trace['stim_end']  = [delay + duration]
+            self.trace['stim_start'] = [delay-10]
+            self.trace['stim_end']  = [500]
 
             return volt, t
 
@@ -53,13 +55,15 @@ class EfelMeasurements():
 
 
 if __name__ == '__main__':
-        delay = 150
+        delay = 150 #150
         duration = 1
-        current = 21
+        current =21
         efel.setDoubleSetting('stimulus_current',current)
+        efel.setIntSetting("strict_stiminterval", True)
+
         testEFEL = EfelMeasurements()
         testEFEL.stimulateCell(current, duration, delay, testEFEL.iseg, 0.5, 500)
-        testEFEL.getMeasurements(['AP_amplitude','AP1_amp','AHP_depth_abs','AHP_depth','AP_width','decay_time_constant_after_stim','ohmic_input_resistance','ohmic_input_resistance_vb_ssse'])
-        
+        testEFEL.getMeasurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+        testEFEL.model.graphVolt(testEFEL.volt, testEFEL.t,"trace").show()
     
 
