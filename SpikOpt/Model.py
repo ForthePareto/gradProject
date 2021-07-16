@@ -26,3 +26,38 @@ class Model(abc.ABC):
     @abc.abstractmethod
     def get_model_parameters(self, printing=PRINTING):
         pass
+
+
+
+class Plotter:
+    @staticmethod
+    def graphVolt(voltVector, tVector, label):
+        plt.figure()
+        # axes = plt.gca()
+        # axes.set_ylim([-80,40])
+        plt.plot(tVector, voltVector, color='k', label=label)
+        plt.xlabel('t (ms)')
+        plt.ylabel('v (mV)')
+        # plt.show()
+
+        return plt
+
+    @staticmethod
+    def graphOverlap(v1, t1, color1, label1, alpha1, v2, t2, color2, label2, alpha2, title):
+        plt.figure()
+        plt.plot(t1, v1, color=color1, alpha=alpha1, label=label1)
+        plt.plot(t2, v2, color=color2, alpha=alpha2, label=label2)
+        plt.title(title)
+        plt.legend()
+        plt.xlabel('t (ms)')
+        plt.ylabel('v (mV)')
+        # plt.show()
+
+        return plt
+
+    @staticmethod
+    def graphMarker(plt, markAtT, markAtVolt, label, markerShape='X'):
+        plt.plot(markAtT, markAtVolt, label=label, marker=markerShape)
+        plt.legend()
+
+        # plt.show()

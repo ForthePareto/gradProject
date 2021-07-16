@@ -1,4 +1,4 @@
-from NrnModel import NrnModel, Level
+from NrnModel import NrnModel
 import math
 import numpy as np
 # from xlwt import Workbook
@@ -6,6 +6,9 @@ import time
 from neuron import h
 from efelMeasurements import EfelMeasurements
 import efel
+
+from Model import Plotter , Level
+
 PLOTTING = False
 PRINTING = False
 
