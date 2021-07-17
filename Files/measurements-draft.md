@@ -180,16 +180,200 @@ shows a schematic diagram of an axon and the charge distributions that would be 
 
 
 ### 6.	what are the possible ways to compare two action potentials?  (point-to-point vs features based comparison)
-		pass
+__Error functions__
+
+Several methods exist to compare the output of models withexperimental data and each of them has its own advantagesand disadvantages. In this section we describe some of theerror functions that have been recently used in the literature.These functions describe either the ﬁtness of the solution,in which case a higher ﬁtness value corresponds to a bettersolution, or the error made and then one wants to minimizethe function. We have chosen to use the terminology of thelatter approach in the text.
+
+The choice of an error function (See Fig. 1for an example)is very important since it will inﬂuence the ﬁnal choice of aparameter set (a solution) and the performance of the searchalgorithm used. Several criteria should be taken into accountwhen creating an error function, among those we would like to emphasize:
+![](pics/features-vs-ptp.png)
+
+_Relevance:_ The function should reﬂect fundamental pro-perties of the data that the model has to reproduce.
+
+_Speed:_ The function should be fast to calculate, sincetypically a large amount of error evaluations are performedduring the search.
+
+_Smoothness:_ The solution space should be as simple aspossible, so that the search algorithm can rapidly convergeto a global optimum. This in general means as little localminima as possible.
+
+
+__Feature-based__ 
+
+A ﬁrst approach to deﬁne an error function, which has alreadyproven successful, is to use features of the data as pointsof comparison with the models. Examples of such featuresinclude average spike height and spike width, resting mem-brane potential, after-hyperpolarizing potential, ﬁring rate,bursting rate, etc.
+
+One advantage is that these criteria can be averaged overdifferent data sets, so that a model can be ﬁtted to the statis-tics of a trace instead of to the properties of a single recording(Druckmann et al. 2007). This can be useful since the res-ponse of a cell to a certain stimulus can vary signiﬁcantlyfrom trial to trial, even when repeated after a short interval.So it makes sense to emphasize more the average behaviorof a cell to reduce the effect of noise.
+
+Another advantage is the focus of the method on criteriathat the scientist judge relevant. If one designs a model inorder to reproduce, for example, a given ﬁring rate with agiven variability with no interest at all in the height of thespikes or the sub-threshold potential waveform, this type oferror function is deﬁnitively to be advised.
+
+All these measures need however, clear prior deﬁnitions,which are very user-speciﬁc and sometimes difﬁcult to auto-mate. Indeed, during the exploration of the full parameterspace a model might have very erratic behaviors and the mea-sure in use should be robust. Measuring the spike height forexample relies on spike detection and can be quite complica-ted (Lewicki 1998). Spikes haveto be distinguished from sub-threshold variations, plateaus, single-spike bursts, spikeletsor noise and their deﬁnition has to be stable for different res-ting potentials. It is therefore impossible to come to a uniquedeﬁnition of a spike that will be effective in any cell, in anylocation (dendrite, soma, axon, etc.) and in any experimentalcondition (patch-clamp, extracellular recording, voltage dyeimaging, etc.).
+
+
+__Point-to-point comparison:__
+
+Another approach is to compare electrophysiological tracesin a more direct manner. The easiest method is to calculatethe root mean square of the difference between the data andthe model voltage traces:
+
+![](pics/features-vs-ptp2.png)
+
+
+where Vdata[i]is the data voltage at the ith time step andVmodel[i]the model one. Nis the number of time steps in the voltage recording.
+
+This approach faces the problem that it is very sensitiveto time shifts between the traces. This is illustrated in Fig. 2,where a spike train is compared to itself with a small timeshift and can cause an error value that is larger than when it iscompared to a ﬂat trace. An obvious solution to this problemwould be to shift the traces before comparing them, so thatthe peaks of the spikes coincide. While this is easy for spiketrains that are regular, it creates serious problems in morecomplex cases. For example, comparing spikes that belongto bursts when the number of spikes per burst is not identicalmakes the realignment impossible.
+
+The PPTD method (LeMasson 2001) belongs to this samecategory but presents fewer problems with phase shifts. Wewill describe it more extensively in the last section of thisarticle.Handling high levels of noise can be more difﬁcult withpoint-to-point comparison than with feature-based errorfunctions. With low noise levels and cell-to-cell variation,the above equation can be normalized to the noise level
+
+![](pics/features-vs-ptp3.png)
 
 ### 7. 	what features are we extracting ? (list them with pics and sudo code)
   
 1. time constant (tuo)
 2. internal resistance (resistance of the axoplasm) (Ri)
+3. average internal resistance 
+4. Action potential (AP) Height
+5. Action potential (AP) Width
+6.  after-hyperpolarization (AHP) depth 
+7. after-hyperpolarization (AHP) Duration
+8. after-hyperpolarization (AHP) Half-Duration
+9. after-hyperpolarization (AHP) Half-Decay
+10. after-hyperpolarization (AHP)Rising-Time
+11. Rheobase
 
-Time Constant. First, consider a thermal analogue. Place a block of metal at 10oC on a hotplate at 100oC. How would the temperature change? It will increase from its initial value of 10oC to a final value of 100oC. But the temperature will not change instantly. In fact, it would change as an exponential function of time. An analogous situation occurs in nerve cells, when they receive an instantaneous stimulus. The figure at right represents an idealized nerve cell. The recording electrode initially measures a potential of -60 mV (the resting potential). At some point in time (time 0), the switch is closed. The switch closure occurs instantaneously and as a result of the instantaneous closure, instantaneous current flows through the circuit. (This is equivalent to slamming the block of metal on the hotplate.) Note that despite the fact that this stimulus changes instantly, the change in potential does not occur instantaneously. It takes time for the potential to change from its initial value of -60 mV to its final value of -50 mV. There is a total of 10 mV depolarization, but the change occurs as an exponential function of time.
-There is a convenient index of how rapidly exponential functions change with time. The index is denoted by the symbol τ and called the time constant. It is defined as the amount of time it takes for the change in potential to reach 63% of its final value. (Why 63%?) In this example, the potential changes from -60 to -50 and the 63% value is -53.7 mV. Thus, the time constant is 10 msec. The smaller the time constant, the more rapid will be the change in response to a stimulus. Therefore, if this neuron had a time constant of 5 msec, then in 5 msec the membrane potential would reach -53.7 mV. The time constant is analogous to the 0 to 60 rating of a high performance car; the lower the 0 to 60 rating, the faster the car. The lower the time constant, the faster or more rapidly a membrane will respond to a stimulus. The effects of the time constant on propagation velocity will become clear below.
+__time constant (tuo)__
 
-The time constant is a function of two properties of membranes, the membrane resistence (Rm ) and the membrane capacitance (Cm ). Rm is the inverse of the permeability; the higher the permeability, the lower the resistance, and vice versa. Membranes, like the physical devices known as capacitors, can store charge. When a stimulus is delivered, it takes time to charge up the membrane to its new value.
+    the time for the potential to change from its initial value to its final value ,the change occurs as an exponential function of time.
+
 
 ![](pics/timeConst.png)
+![](pics/tuo.png)
+
+Time Constant: 6.250650288630949
+
+
+
+__internal resistance (resistance of the axoplasm) (Ri)__
+
+- The ohmic input resistance Ri of the cell
+
+___Pseudocode:___
+
+```python
+    inputResistance = abs((restMembPot - minDepolarPot)/amp)
+```
+
+![](pics/Ri.png)
+
+inputResistance: 1.260194673127046 (mV/nA)
+
+
+
+__average internal resistance__ 
+
+- The average ohmic input resistance Ri of the cell 
+
+        Measures the average input resistance over many samples
+
+    ___Pseudocode:___
+
+    ```python
+        avgResistance = [inputResistance(amp) for amp in sampleAmps]
+        sum(avgResistance)/len(avgResistance)
+    ```
+<!-- ![](pics/Ri.png) -->
+
+avgInRes: 1.258624200003532 (mV/nA)
+
+__Action potential (AP) Height__
+
+- The relative height of the action potential 
+
+      Difference betweent AP-Start and AP-Peak potentials
+
+
+![](pics/apHeight.png)
+![](pics/apHeightZoomed.png)
+
+apHeight: 81.48010635220452 mV
+
+
+
+
+__Action potential (AP) Width__
+
+- Width of spike
+
+        Time from AP half-amplitude value in Depolarization, till the same value is reached in Repolarization phase
+
+
+![](pics/apWidth.png)
+![](pics/apWidthZoomed.png)
+
+apWidth: 1.0249999999990678 ms
+
+
+__after-hyperpolarization (AHP) depth__ 
+
+-   Relative depth of ahp phase
+
+        Difference between Resting membrane potential and min potential in hyperpolarization phase
+
+![](pics/ahpDepth.png)
+![](pics/ahpDepthZoomed.png)
+
+
+AHPDepthV :5.3130574256519765 mV
+
+__after-hyperpolarization (AHP) Duration__
+
+- hyperpolarization-phase time ...
+    
+        Time from AHP-Start(resting-membrane pot.) till AHP-End (resting-membrane pot. agian)
+
+
+![](pics/ahpDuration.png)
+![](pics/ahpDurationZoomed.png)
+
+AHPDuration: 64.82499999994104 mSecs
+
+__after-hyperpolarization (AHP) Half-Duration__
+
+    time between AHP-half values
+
+
+![](pics/ahpHalfDuration.png)
+![](pics/ahpHalfDurationZoomed.png)
+
+
+AHPHalfDuration: 42.37499999996146 mSecs
+
+__after-hyperpolarization (AHP) Half-Decay__
+
+    time from AHP-trough to AHP-half valve
+
+
+![](pics/ahp-halfDecay.png)
+![](pics/ahp-halfDecayZoomed.png)
+
+AHPHalfDecay: 32.24999999997067 mSecs
+
+__after-hyperpolarization (AHP)Rising-Time__
+
+    time from AHP-Start till AHP-trough
+
+
+![](pics/ahpRisingTime.png)
+![](pics/ahpRisingTimeZoomed.png)
+
+AHPRisingTime :11.274999999989745 mSecs
+__Rheobase__
+
+    the min Current for a long duration (+50 ms), that causes a spike and is estimulated from the soma. 
+
+![](pics/Rheobase_iter1.png)
+![](pics/Rheobase_iter2.png)
+![](pics/Rheobase_iter3.png)
+![](pics/Rheobase_iter4.png)
+![](pics/Rheobase_iter5.png)
+![](pics/Rheobase_iter6.png)
+![](pics/Rheobase_iter7.png)
+![](pics/Rheobase_iter8.png)
+![](pics/Rheobase_iter9.png)
+
+
+
+rheobase 8 nA
