@@ -17,10 +17,10 @@ class Model(abc.ABC):
 
     def __init__(self, model_file: str):
         self.model_parameters = None
-        self.run(model_file)
+        self.setup(model_file)
 
     @abc.abstractmethod
-    def run(self, model_file: str, model_name: str = None):
+    def setup(self, model_file: str, model_name: str = None):
         pass
 
     @abc.abstractmethod

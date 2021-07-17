@@ -6,20 +6,22 @@ import time
 from neuron import h
 from efelMeasurements import EfelMeasurements
 import efel
-
+from collections import OrderedDict
 from Model import Plotter , Level
 
 PLOTTING = False
 PRINTING = False
+SUPPORTED_MODEL_TYPES= ['Nmodel']
 
-
-class FiveCompModel():
-    def __init__(self,modelHocFile:str = "5CompMy_temp.hoc"):
-
-        self.model = NrnModel(modelHocFile)
-        self.soma = self.model.soma
-        self.iseg = self.model.iseg
-        self.dendrites = self.model.dendrites
+class Simulator():
+    def __init__(self,model_type :str , model_file: str,model_name:str):
+        if model_type == "Nmodel":
+            self.model = NrnModel(model_file,model_name)
+        else:
+            raise NotImplementedError(f"only {SUPPORTED_MODEL_TYPES} are supported")
+        # self.soma = self.model.soma
+        # self.iseg = self.model.iseg
+        # self.dendrites = self.model.dendrites
         self.EXPRIMENTAL_DATA = np.array([["input resistance", 1.26],
                                           ['AP Height', 81.48],
                                           ["AP Width", 1.02],
@@ -47,7 +49,12 @@ class FiveCompModel():
         # self.row = None
         # self.col = None
         # self.xlSheetInit()
+    def fetch_model_parameters(self) -> OrderedDict:
+        return self.model.get_model_parameters()
 
+    def fetch_model_channels(self) -> OrderedDict:
+        return self.model.get_compartments_channels()
+    
     def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
         """ Stimulate the cell with the supplied properties
             Args:
@@ -1019,7 +1026,7 @@ if __name__ == '__main__':
         return (row+1)
 
     def testRun(plotting: bool, printing: bool, save_to_file: bool):
-        modelRun = FiveCompModel()
+        modelRun = Simulator()
 
         modelRun.model.getModelParameters()
         # modelRun.somaParams()
@@ -1122,7 +1129,7 @@ if __name__ == '__main__':
     # print("Measurements are done in--- %s seconds ---" %
     #       (time.time() - start_time))
 
-    model = FiveCompModel()
+    model = Simulator()
     # model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224,
     #    0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
     # model.setNonPassiveParams([0.3865326748233099, 0.15095456804461402, 0.01285859938420347, 0.29840635090426376, 0.017506734583927555, 0.7315609248478437])

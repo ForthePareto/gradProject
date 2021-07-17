@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from enum import Enum
 import pprint
 
-PRINTING = True
+PRINTING = False
 
 
 class Level(Enum):
@@ -17,7 +17,7 @@ class Level(Enum):
 
 
 class NrnModel(Model):
-    def __init__(self, model_file: str, model_name: str = None):
+    def __init__(self, model_file: str, model_name: str ):
         if model_name is None:
             raise ValueError(
                 "You Must give the model name in the Nmodel template")
@@ -25,9 +25,9 @@ class NrnModel(Model):
         self.compartments_list = None
         self.channels = None
         self.model_parameters = None
-        self.run(model_file, model_name)
+        self.setup(model_file, model_name)
 
-    def run(self, model_file: str, model_name: str = None):
+    def setup(self, model_file: str, model_name: str = None):
         """loading the model hoc file, updates self.compartments_dict ,self.compartments_list """
         # loading the cell
         if model_name is None:
