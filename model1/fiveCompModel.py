@@ -716,6 +716,7 @@ class FiveCompModel():
         self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
 
     def setNonPassiveParams(self, params: list):
+       
         self.model.soma.gnabar_NafSmb1,\
             self.model.soma.gkdrbar_KdrSmb1,\
             self.model.soma.gkcabar_CaSmb1,\
@@ -1123,9 +1124,10 @@ if __name__ == '__main__':
     # model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224,
     #    0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
     # model.setNonPassiveParams([0.3865326748233099, 0.15095456804461402, 0.01285859938420347, 0.29840635090426376, 0.017506734583927555, 0.7315609248478437])
-    # model.setNonPassiveParams([0.8915485852981853, 0.9891505531636227, 0.03785323436596699, 0.12185825476352832, 0.07039571347860495, 0.0702996422573877])
+    model.setNonPassiveParams([0.8915485852981853, 0.9891505531636227, 0.03785323436596699, 0.12185825476352832, 0.07039571347860495, 0.0702996422573877])
     # model.setNonPassiveParams([0.9571472348218247, 0.8888712322766363, 0.0396973350549424, 0.9718646220118743, 0.05839309301160812, 0.3126811561554764])
-    model.setNonPassiveParams([0.7157734280535681, 0.0783158275088403, 0.037849066079255686, 0.20186479394872267, 0.042968980382427205, 0.43630327285909665])
+    # model.setNonPassiveParams([0.7157734280535681, 0.0783158275088403, 0.037849066079255686, 0.20186479394872267, 0.042968980382427205, 0.43630327285909665])
+    # model.setNonPassiveParams([0.49419844 ,0.5273805 , 0.565607  , 0.42582998, 0.17253749 ,0.86881554])
     delay = 150
     duration = 1
     current = 21
@@ -1133,11 +1135,11 @@ if __name__ == '__main__':
     efel.setIntSetting("strict_stiminterval", True)
     # efel.setDoubleSetting('delay', delay)
 
-    model.stimulate_efel_Cell(current, duration, delay, model.iseg, 0.5, 500)
+    # model.stimulate_efel_Cell(current, duration, delay, model.iseg, 0.5, 500)
     # model.print_EFEL_Measurements(['AP_amplitude', 'AP1_amp', "AP_height", 'AP_width', "spike_half_width", 'AHP_depth_abs', "fast_AHP", 'AHP_depth',
     #  "AHP_time_from_peak", "AHP_slow_time", 'decay_time_constant_after_stim', 'ohmic_input_resistance', 'ohmic_input_resistance_vb_ssse'])
-    model.print_EFEL_Measurements(
-        ["AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs',"AHP_depth", "AHP_time_from_peak"])
+    # model.print_EFEL_Measurements(
+    #     ["AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs',"AHP_depth", "AHP_time_from_peak"])
     model.EXPRIMENTAL_DATA = np.array(
         [["AP_amplitude", 80.414],
          ["AP_height", 14.527],
@@ -1147,7 +1149,7 @@ if __name__ == '__main__':
          ])
     # print(model.get_EFEL_measurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"]))
     print("######################### our measurements###################################")
-    # model.get_AP_measurements(printing=True, plotting=False)
+    model.get_AP_measurements(printing=True, plotting=True)
     # # print(model.model.cell.soma_dends_resistance_ratio)
     # # model.model.cell.global_conductance = 1/400
     # model.model.soma.g_pas = 69

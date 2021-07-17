@@ -34,7 +34,7 @@ class NrnModel():
 
     def getModelParameters(self):
         topology = self.soma.wholetree()
-        pp = pprint.PrettyPrinter(sort_dicts=False)
+        pp = pprint.PrettyPrinter()
         modelParams = []
         print(topology)
         for section in topology:
@@ -43,7 +43,62 @@ class NrnModel():
             # print(type(section.psection()))
         pp.pprint(modelParams)
         return modelParams
+    def GetParameters(self):
+        """
+        Collects every member of every section object and filters out those that are not parameters of
+        the model. The function will collect:
+            * every parameter of the the mechanisms
+            * every mechanism
+            * some default parameters that are always included in a model,
+              and pointprocesses that are not some sort of Clamp
+        :return: the filtered content of the model in a string matrix
+        """
 
+        matrix=[]
+        temp=[]
+        parname=[]
+        mechs_pars=[]
+        DEFAULTS=[]
+        seg_num=0
+
+        for sec in h.allsec():
+            temp.append(str(h.secname(sec=sec)))
+
+            DEFAULTS=["morphology",["L" , "cm" , "Ra", "diam"]]
+            mechs_pars.append(DEFAULTS)
+            for seg in sec:
+
+                for mech in seg:
+
+                    # i+=1
+                    h('strdef mtname, msname')
+                    h('mtname=" "')
+                    h('objref mechs')
+                    h.mtname=mech.name()
+                    h('mechs=new MechanismStandard(mtname)')
+                    h('k = mechs.count()')
+                    parnum=int(h.k)
+                    h('j=0')
+                    for j in range(parnum):
+                        h.j = j
+                        h('k = mechs.name(msname, j)')
+                        parname.append(h.msname)
+                    mechs_pars.append([ mech.name(),parname])
+                    #mechs_pars.append(parname)
+                    parname=[]
+                seg_num+=1
+
+                temp.append(mechs_pars)
+            print(seg_num)
+            mechs_pars=[]
+                    #temp.append(channels)
+            seg_num=0
+            matrix.append(temp)
+
+            temp=[]
+                #mechs_pars=[]
+                #break
+        return matrix
     def singleCellRun(self, cellTemplateFile):
         # loading the cell
         h.load_file(cellTemplateFile)    # with no h current
@@ -107,3 +162,8 @@ class NrnModel():
         plt.legend()
 
         # plt.show()
+
+
+
+if __name__ == '__main__':
+    pprint.PrettyPrinter().pprint((NrnModel("5CompMy_temp.hoc").GetParameters()[0]))
