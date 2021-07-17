@@ -124,20 +124,72 @@ The key components of the membrane are shown in Figure 2.2. The bulk of the memb
 
 
 __Ion channels__ are pores in the lipid bilayer, made of proteins, which can allow certain ions to flow through the membrane. A large body of biophysical work, starting with the work of Hodgkin and Huxley (1952d) described in Chapter 3 and summarised in Chapter 5, has shown that many types of ion channels, referred to as active channels, can exist in open states, where it is possible for ions to pass through the channel, and closed states, in which ions cannot permeate through the channel. Whether an active channel is in an open or closed state may depend on the membrane potential, ionic concentrations or the presence of bound ligands, such as neurotransmitters. In contrast, passive channels do not change their permeability in response to changes in the membrane potential. Sometimes a channel’s dependence on the membrane potential is so mild as to be virtually passive. Both passive channels and active channels in the open state exhibit selective permeability to different types of ion. Channels are often labelled by the ion to which they are most permeable. _For example, potassium channels primarily allow potassium ions to pass through. There are many types of ion channel, each of which has a different permeability to each type of ion._
+![potential difference](pics/download.jpeg)
+![potential difference2](pics/download(1).jpeg)
+![potential difference](pics/download(2).jpeg)
+![potential difference](pics/download(3).jpeg)
 
-
+The __potential difference__ across a nerve cell membrane can be measured with a microelectrode whose tip is so small (about a micron) that it can penetrate the cell without producing any damage. When the electrode is in the bath (the extracellular medium) there is no potential recorded because the bath is isopotential. If the microelectrode is carefully inserted into the cell, there is a sharp change in potential. The reading of the voltmeter instantaneously changes from 0 mV, to reading a potential difference of -60 mV inside the cell with respect to the outside. The potential that is recorded when a living cell is impaled with a microelectrode is called the resting potential, and varies from cell to cell. Here it is shown to be -60 mV, but can range between -80 mV and -40 mV, depending on the particular type of nerve cell. In the absence of any stimulation, the resting potential is generally constant.
 
 Intracellular recordings (Figure 3.1) demonstrate that __action potentials__ are characterised by a sharp increase in the membrane potential (depolarisation of the membrane) followed by a somewhat less sharp decrease towards the resting potential (repolarisation). This may be followed by an afterhyperpolarisation phase in which the membrane potential falls below the resting potential before recovering gradually to the resting potential.
 
-___------ADD FIGURE------___
+![action potential](pics/ap.png)
 
+
+__Components of the Action Potentials__
+
+The action potential consists of several components (Figure 1.3B). The threshold is the value of the membrane potential which, if reached, leads to the all-or-nothing initiation of an action potential. The initial or rising phase of the action potential is called the depolarizing phase or the upstroke. The region of the action potential between the 0 mV level and the peak amplitude is the overshoot. The return of the membrane potential to the resting potential is called the repolarization phase. There is also a phase of the action potential during which time the membrane potential can be more negative than the resting potential. This phase of the action potential is called the undershoot or the hyperpolarizing afterpotential.  In Figure 1.4, the undershoots of the action potentials do not become more negative than the resting potential because they are "riding" on the constant depolarizing stimulus.
+
+![](pics/ap1.png)
+![](pics/ap2.png)
 
 ### 5.	what affects action potenials (model parameters , channels...)?
-		pass
+
+__Voltage-Dependent Conductances__
+
+Na+ is critical for the action potential in nerve cells. As shown in Figure 2.1, action potentials are repeatedly initiated as the extracellular concentration of Na+ is modified. As the concentration of sodium in the extracellular solution is reduced, the action potentials become smaller.
+at the peak of the action potential, the membrane becomes highly permeable to sodium.
+
+![](pics/ap-Na.png)
+
+an important property of the voltage-dependent Na+ channels. Note that the permeability increases rapidly and then, despite the fact that the membrane potential is clamped, the permeability decays back to its initial level. This phenomenon is called inactivation. The Na+ channels begin to close, even in the continued presence of the depolarization. Inactivation contributes to the repolarization of the action potential. However, inactivation is not enough by itself to account fully for the repolarization.
+
+
+
+In addition to voltage-dependent changes in Na+ permeability, there are voltage-dependent changes in K+ permeability. These changes can be measured with the voltage-clamp technique as well. The figure shown to above indicates the changes in K+ conductance as well as the Na+ conductance. There are two important points.
+
+First, just as there are channels in the membrane that are permeable to Na+ that are normally closed but then open in response to a voltage, there are also channels in the membrane that are selectively permeable to K+. These K+ channels are normally closed, but open in response to depolarization.
+
+Second, a major difference between the changes in the K+ channels and the changes in the Na+ channels is that the K+ channels are slower to activate or open. (Some K+ channels also do not inactivate.)  Note that the return of the conductance at the end of the pulse is not the process of inactivation.  With the removal of the pulse, the activated channels are deactivated.
+
+![](pics/ap-na-k.png)
+![](pics/ap-na-k-2.png)
+
+A positive feedback cycle rapidly moves the membrane potential toward its peak value, which is close but not equal to the Na+ equilibrium potential. Two processes which contribute to repolarization at the peak of the action potential are then engaged. First, the Na+ conductance starts to decline due to inactivation. As the Na+ conductance decreases, another feedback cycle is initiated, but this one is a downward cycle. Sodium conductance decreases, the membrane potential begins to repolarize, and the Na+ channels that are open and not yet inactivated are deactivated and close. Second, the K+ conductance increases. Initially, there is very little change in the K+ conductance because these channels are slow to open, but by the peak of the action potential, the K+ conductance begins to increase significantly and a second force contributes to repolarization. As the result of these two forces, the membrane potential rapidly returns to the resting potential. At the time it reaches -60 mV, the Na+ conductance has returned to its initial value. Nevertheless, the membrane potential becomes more negative (the undershoot or the hyperpolarizing afterpotential).
+
+The key to understanding the hyperpolarizing afterpotential is in the slowness of the K+ channels. Just as the K+ channels are slow to open (activate), they are also slow to close (deactivate). Once the membrane potential starts to repolarize, the K+ channels begin to close because they sense the voltage. However, even though the membrane potential has returned to -60 mV, some of the voltage-dependent K+ channels remain open. Thus, the membrane potential will be more negative than it was initially. Eventually, these K+ channels close, and the membrane potential returns to -60 mV.
+
+Why does the cell go through these elaborate mechanisms to generate an action potential with a short duration? Recall how information is coded in the nervous system. If the action potential was about one msec in duration, the frequency of action potentials could change from once a second to a thousand a second. Therefore, short action potentials provide the nerve cell with the potential for a large dynamic range of signaling.
+
+shows a schematic diagram of an axon and the charge distributions that would be expected to occur along the membrane of that axon. Positive charges exist on the outside of the axon and negative charges on the inside. Now consider the consequences of delivering some stimulus to a point in the middle of the axon. If the depolarization is sufficiently large, voltage-dependent sodium channels will be opened, and an action potential will be initiated.
+
+![](pics/ap-trans1.png)
+![](pics/ap-trans3.png)
+![](pics/ap-trans4.png)
+![](pics/ap-trans2.png)
+
 
 ### 6.	what are the possible ways to compare two action potentials?  (point-to-point vs features based comparison)
 		pass
 
 ### 7. 	what features are we extracting ? (list them with pics and sudo code)
   
-		pass
+1. time constant (tuo)
+2. internal resistance (resistance of the axoplasm) (Ri)
+
+Time Constant. First, consider a thermal analogue. Place a block of metal at 10oC on a hotplate at 100oC. How would the temperature change? It will increase from its initial value of 10oC to a final value of 100oC. But the temperature will not change instantly. In fact, it would change as an exponential function of time. An analogous situation occurs in nerve cells, when they receive an instantaneous stimulus. The figure at right represents an idealized nerve cell. The recording electrode initially measures a potential of -60 mV (the resting potential). At some point in time (time 0), the switch is closed. The switch closure occurs instantaneously and as a result of the instantaneous closure, instantaneous current flows through the circuit. (This is equivalent to slamming the block of metal on the hotplate.) Note that despite the fact that this stimulus changes instantly, the change in potential does not occur instantaneously. It takes time for the potential to change from its initial value of -60 mV to its final value of -50 mV. There is a total of 10 mV depolarization, but the change occurs as an exponential function of time.
+There is a convenient index of how rapidly exponential functions change with time. The index is denoted by the symbol τ and called the time constant. It is defined as the amount of time it takes for the change in potential to reach 63% of its final value. (Why 63%?) In this example, the potential changes from -60 to -50 and the 63% value is -53.7 mV. Thus, the time constant is 10 msec. The smaller the time constant, the more rapid will be the change in response to a stimulus. Therefore, if this neuron had a time constant of 5 msec, then in 5 msec the membrane potential would reach -53.7 mV. The time constant is analogous to the 0 to 60 rating of a high performance car; the lower the 0 to 60 rating, the faster the car. The lower the time constant, the faster or more rapidly a membrane will respond to a stimulus. The effects of the time constant on propagation velocity will become clear below.
+
+The time constant is a function of two properties of membranes, the membrane resistence (Rm ) and the membrane capacitance (Cm ). Rm is the inverse of the permeability; the higher the permeability, the lower the resistance, and vice versa. Membranes, like the physical devices known as capacitors, can store charge. When a stimulus is delivered, it takes time to charge up the membrane to its new value.
+
+![](pics/timeConst.png)
