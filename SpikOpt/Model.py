@@ -28,16 +28,13 @@ class Model(abc.ABC):
         pass
 
 
-
 class Plotter:
     @staticmethod
-    def graphVolt(voltVector, tVector, label):
-        plt.figure()
-        # axes = plt.gca()
-        # axes.set_ylim([-80,40])
-        plt.plot(tVector, voltVector, color='k', label=label)
-        plt.xlabel('t (ms)')
-        plt.ylabel('v (mV)')
+    def graphVolt(self, voltVector, tVector, label, ax, color="black"):
+        # plt.figure()
+        ax.plot(tVector, voltVector, color=color, label=label)
+        ax.set(xlabel='t (ms)')
+        ax.set(ylabel='v (mV)')
         # plt.show()
 
         return plt

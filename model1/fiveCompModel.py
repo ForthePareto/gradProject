@@ -6,12 +6,14 @@ import time
 from neuron import h
 from efelMeasurements import EfelMeasurements
 import efel
+import warnings
+
 PLOTTING = False
 PRINTING = False
 
 
 class FiveCompModel():
-    def __init__(self,modelHocFile:str = "5CompMy_temp.hoc"):
+    def __init__(self, modelHocFile: str = "5CompMy_temp.hoc"):
 
         self.model = NrnModel(modelHocFile)
         self.soma = self.model.soma
@@ -35,7 +37,17 @@ class FiveCompModel():
                 ["AHP_depth_abs", -70.28],
                 ["AHP_time_from_peak", 16.3],
              ])
-        self.measurements = np.zeros((9))
+        self.EXPRIMENTAL_DATA = np.array(
+            [ 
+                  ["Spikecount", 1],
+                ["time_to_first_spike", 150+1.2],
+                ["AP_amplitude", 80.414],
+                ["AP_height", 14.527],
+                ['AP_width', 0.8],
+                ["AHP_depth_abs", -70.288],
+                ["AHP_time_from_peak", 16.3],
+             ])
+        self.measurements = np.zeros(len(self.EXPRIMENTAL_DATA))
 
         self.trace = {}
 
@@ -60,7 +72,8 @@ class FiveCompModel():
         :return t: the recorded time vector
 
          """
-        stim = self.model.setIClamp(delay, duration, clampAmp, segment=stimSeg, position=clampAt)
+        stim = self.model.setIClamp(
+            delay, duration, clampAmp, segment=stimSeg, position=clampAt)
         volt, t = self.model.recordVolt(self.model.soma, 0.5)
         self.model.runControler(TStop=Tstop, init=-65)
 
@@ -188,10 +201,10 @@ class FiveCompModel():
             :return apPeak: the peak potential in milliVolts
 
         """
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
-            return 0,0,0
+            return 0, 0, 0
         volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
         # get peak point
         vPeak = max(volt)
@@ -231,12 +244,13 @@ class FiveCompModel():
         """
         # TODO: find the end of the spike with the interval function that will be done later
         # volt, time = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + 10)
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
-        
-        volt, time, plt = self.patternHighligher(voltVec, timeVec, delay, duration, False)
+
+        volt, time, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, False)
         apHeight, vRest, vPeak = self.APHeight(
             voltVec, timeVec, delay, duration, False, False)
         # calculate the mid point
@@ -248,7 +262,7 @@ class FiveCompModel():
         if matches == []:
             if printing:
                 print("no matches were found!")
-            return 0 # could have retried with a different precesion
+            return 0  # could have retried with a different precesion
         matches = list(zip(*matches))
         # print(f'matches {matches}')
         vMatches = matches[0]
@@ -289,12 +303,13 @@ class FiveCompModel():
         :return AHPDepth:depth of the AHP phase in mV
 
         """
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
 
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         AHPStartT = t[0]
@@ -326,12 +341,13 @@ class FiveCompModel():
 
         :return AHPDuration:duration of the AHP phase in mSec
         """
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
 
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPStartT = t[0]
 
@@ -364,12 +380,13 @@ class FiveCompModel():
 
         :return AHPHalfDuration:half duration of the AHP phase in mSec
         """
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
-        
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         # print(f'AHPPeakV :{AHPPeakV}')
@@ -382,13 +399,13 @@ class FiveCompModel():
         if matches == []:
             if printing:
                 print("no matches were found!")
-            return 0 # could have retried with a different precesion
+            return 0  # could have retried with a different precesion
 
         # print(f'\nmatches :{matches}\n')
         matches = list(zip(*matches))
         # print(f'\nmatches zip: {matches}\n')
 
-        #   TODO: remove print later 
+        #   TODO: remove print later
         if printing:
             print(f'AHPHalfV :{AHPHalfV}')
             # print(f'matches {matches}')
@@ -425,13 +442,14 @@ class FiveCompModel():
 
         :return AHPHalfDecay:half decay of the AHP phase in mSec
         """
-        
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
-        
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPPeakV = min(volt)
         AHPPeakT = t[volt.index(AHPPeakV)]
@@ -444,7 +462,7 @@ class FiveCompModel():
         if matches == []:
             if printing:
                 print("no matches were found!")
-            return 0 # could have retried with a different precesion
+            return 0  # could have retried with a different precesion
 
         matches = list(zip(*matches))
         # print(f'matches {matches}')
@@ -481,13 +499,13 @@ class FiveCompModel():
             :return AHPRisingTime: Rising Time of the AHP phase in mSec
         """
         # check if there's a spike
-        if(not(self.isSpike(voltVec,timeVec,delay,duration,Level.HIGH,PLOTTING))):
+        if(not(self.isSpike(voltVec, timeVec, delay, duration, Level.HIGH, PLOTTING))):
             if printing:
                 print("No spike detected")
             return 0
 
-        
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration, plotting=plotting, reverse=True)
         AHPStartV = volt[0]
         AHPStartT = t[0]
 
@@ -526,7 +544,8 @@ class FiveCompModel():
 
             for current in np.arange(start, end, step):
 
-                volt, t = self.stimulateCell(current, duration, delay, self.soma, 0.5, 500)
+                volt, t = self.stimulateCell(
+                    current, duration, delay, self.soma, 0.5, 500)
                 if self.isSpike(volt, t, delay, duration, accuracy, plotting=PLOTTING):
                     start = current - step
                     end = current
@@ -603,7 +622,8 @@ class FiveCompModel():
             :return plt: matplotlib class member (graph handler,used to overlay on top old graphs)
 
          """
-        volt, t = self.sliceSpikeGraph(voltVec, timeVec, delay, delay + duration + 70)
+        volt, t = self.sliceSpikeGraph(
+            voltVec, timeVec, delay, delay + duration + 70)
 
         stillUp = True
         stillDown = True
@@ -673,12 +693,12 @@ class FiveCompModel():
 
         :return bool: true if spike and false otherwise
          """
-        
-        volt, t, plt = self.patternHighligher(voltVec, timeVec, delay, duration,  plotting=plotting)
+
+        volt, t, plt = self.patternHighligher(
+            voltVec, timeVec, delay, duration,  plotting=plotting)
         if plotting:
             plt.close()
         return (abs(max(volt) - min(volt)) >= accuracy.value)
-
 
 
 ########################################################################
@@ -716,7 +736,7 @@ class FiveCompModel():
         self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
 
     def setNonPassiveParams(self, params: list):
-       
+
         self.model.soma.gnabar_NafSmb1,\
             self.model.soma.gkdrbar_KdrSmb1,\
             self.model.soma.gkcabar_CaSmb1,\
@@ -816,12 +836,20 @@ class FiveCompModel():
         volt, t = self.model.recordVolt(self.model.soma, 0.5)
         self.model.runControler(TStop=Tstop, init=-65)
         self.volt, self.t = volt, t
-
+        import numpy as np
+        # self.model.graphVolt(volt, t,"trace").show()
+        # print( self.closeMatches(t,delay,0.7))
+        # start = sorted(self.closeMatches(t, delay, 0.025),
+        #                key=lambda x: x[0])[0][0]
+        # end = sorted(self.closeMatches(t, delay+duration, 0.025),
+        #              key=lambda x: x[0])[0][0]
+        # print(t[2]-t[1])
+        # print(start)
+        # print(end)
         self.trace['T'] = t
         self.trace['V'] = volt
-        self.trace['stim_start'] = [delay-20]
+        self.trace['stim_start'] = [delay-5]
         self.trace['stim_end'] = [500]
-        return volt, t
 
     def print_EFEL_Measurements(self, featureNames: list):
         traces = [self.trace]
@@ -841,15 +869,20 @@ class FiveCompModel():
         duration = 1
         current = 21
         efel.setDoubleSetting('stimulus_current', current)
-        efel.setIntSetting("strict_stiminterval", True)
+        # efel.setDoubleSetting('interp_step', 0.025)
+        # efel.setIntSetting("strict_stiminterval", True)
         self.stimulate_efel_Cell(
             current, duration, delay, self.model.iseg, 0.5, 500)
         traces = [self.trace]
+
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+
         check_peaks = efel.getFeatureValues(traces, ["Spikecount_stimint"])
+        # print(check_peaks[0]["Spikecount"][0])
         if check_peaks[0]["Spikecount_stimint"][0] == 0:
             return np.zeros(len(featureNames))
         traces_results = efel.getFeatureValues(traces, featureNames)
-        if traces_results[0]["AP_amplitude"] is None: 
+        if traces_results[0]["AP_amplitude"] is None:
             # print("efel failed",len(traces_results[0]["AP_amplitude"]) , len(traces_results[0]["AP_height"]))
             print(f"n spikes are {check_peaks[0]['Spikecount_stimint'][0]}")
             return np.zeros(len(featureNames))
@@ -859,12 +892,15 @@ class FiveCompModel():
 
             for feature_name, feature_values in trace_results.items():
 
-                if len(feature_values) > 0:
-                    measurements.append(feature_values[0])
+                if len(feature_values) > 0:      
+                    measurements.append(np.mean(feature_values))
+                    # measurements.append(np.mean(feature_values))
                 else:
+                    print("cant get "+ feature_name)
                     print(f"{feature_name} failed")
                     measurements.append(0)
-
+            if measurements[1] != 0 :
+                measurements[1] +=delay # ie +delay shift
         return np.array(measurements)
 
     def get_exprimental_data(self):
@@ -1124,32 +1160,34 @@ if __name__ == '__main__':
     # model.setNonPassiveParams([0.49560683118607457, 0.23340705779143517, 0.021298216879921224,
     #    0.11215461948592614, 0.03114830565851094, 0.0923564917708006])
     # model.setNonPassiveParams([0.3865326748233099, 0.15095456804461402, 0.01285859938420347, 0.29840635090426376, 0.017506734583927555, 0.7315609248478437])
-    model.setNonPassiveParams([0.8915485852981853, 0.9891505531636227, 0.03785323436596699, 0.12185825476352832, 0.07039571347860495, 0.0702996422573877])
+    # model.setNonPassiveParams([0.8915485852981853, 0.9891505531636227, 0.03785323436596699,
+                            #    0.12185825476352832, 0.07039571347860495, 0.0702996422573877])
     # model.setNonPassiveParams([0.9571472348218247, 0.8888712322766363, 0.0396973350549424, 0.9718646220118743, 0.05839309301160812, 0.3126811561554764])
     # model.setNonPassiveParams([0.7157734280535681, 0.0783158275088403, 0.037849066079255686, 0.20186479394872267, 0.042968980382427205, 0.43630327285909665])
-    # model.setNonPassiveParams([0.49419844 ,0.5273805 , 0.565607  , 0.42582998, 0.17253749 ,0.86881554])
+    # model.setNonPassiveParams([0.6398347  ,0.02779268, 0.30952212, 0.8451458  ,0.02870856, 0.21565166])
+    # model.setNonPassiveParams([0.9590376504645156, 0.952118010131992, 0.07396540874186228, 0.04368507118383386, 0.16389790666841986, 0.05326181544291657]) #best so far, one spike
     delay = 150
     duration = 1
     current = 21
     efel.setDoubleSetting('stimulus_current', current)
-    efel.setIntSetting("strict_stiminterval", True)
+    # efel.setIntSetting("strict_stiminterval", True)
     # efel.setDoubleSetting('delay', delay)
 
-    # model.stimulate_efel_Cell(current, duration, delay, model.iseg, 0.5, 500)
+    model.stimulate_efel_Cell(current, duration, delay, model.iseg, 0.5, 500)
     # model.print_EFEL_Measurements(['AP_amplitude', 'AP1_amp', "AP_height", 'AP_width', "spike_half_width", 'AHP_depth_abs', "fast_AHP", 'AHP_depth',
     #  "AHP_time_from_peak", "AHP_slow_time", 'decay_time_constant_after_stim', 'ohmic_input_resistance', 'ohmic_input_resistance_vb_ssse'])
-    # model.print_EFEL_Measurements(
-    #     ["AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs',"AHP_depth", "AHP_time_from_peak"])
-    model.EXPRIMENTAL_DATA = np.array(
-        [["AP_amplitude", 80.414],
-         ["AP_height", 14.527],
-         ['AP_width', 0.8],
-         ["AHP_depth_abs", -70.28],
-         ["AHP_time_from_peak", 16.3],
-         ])
-    # print(model.get_EFEL_measurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"]))
+    model.print_EFEL_Measurements(
+        ["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+    # model.EXPRIMENTAL_DATA = np.array(
+    #     [["AP_amplitude", 80.414],
+    #      ["AP_height", 14.527],
+    #      ['AP_width', 0.8],
+    #      ["AHP_depth_abs", -70.28],
+    #      ["AHP_time_from_peak", 16.3],
+    #      ])
+    # print(model.get_EFEL_measurements(["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"]))
     print("######################### our measurements###################################")
-    model.get_AP_measurements(printing=True, plotting=True)
+    model.get_AP_measurements(printing=True, plotting=False)
     # # print(model.model.cell.soma_dends_resistance_ratio)
     # # model.model.cell.global_conductance = 1/400
     # model.model.soma.g_pas = 69
@@ -1157,5 +1195,6 @@ if __name__ == '__main__':
     # print(model.dendrites[1].g_pas)
     # # print(model.model.cell.dend1.g_pas)
     # # print(model.model.cell.dend2.g_pas)
-    # # print(model.model.cell.dend3.g_pas)
-    model.model.graphVolt(model.volt, model.t, "trace").show()
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    model.model.graphVolt(model.volt, model.t, "trace",ax).show()

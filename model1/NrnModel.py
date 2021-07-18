@@ -134,13 +134,13 @@ class NrnModel():
         h.continuerun(TStop * ms)
         # print(list(self.soma_v))
 
-    def graphVolt(self, voltVector, tVector, label):
-        plt.figure()
+    def graphVolt(self, voltVector, tVector, label,ax,color="black"):
+        # plt.figure()
         # axes = plt.gca()
         # axes.set_ylim([-80,40])
-        plt.plot(tVector, voltVector, color='k', label=label)
-        plt.xlabel('t (ms)')
-        plt.ylabel('v (mV)')
+        ax.plot(tVector, voltVector, color=color, label=label)
+        ax.set(xlabel='t (ms)')
+        ax.set(ylabel='v (mV)')
         # plt.show()
 
         return plt

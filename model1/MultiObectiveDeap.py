@@ -15,6 +15,7 @@ from fiveCompModel import FiveCompModel
 from algorithms import eaAlphaMuPlusLambdaCheckpoint, WSListIndividual
 np.random.seed(1)
 
+N = 0
 
 class Nsga2Optimizer:
     def __init__(self, model):
@@ -56,34 +57,47 @@ class Nsga2Optimizer:
     def ErrorVectorNonPassive(self, params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
+        # global N
+        # print(N)
+        # N  += 1
         # passing a solution of parameters to the cell model
-        try:
-            self.model.setNonPassiveParams(params)
-            # getting measurement of model after parameter modification to be evaluated
-            measurements = self.model.get_EFEL_measurements(["AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
-            # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
+        self.model.setNonPassiveParams(params)
+        # getting measurement of model after parameter modification to be evaluated
+        measurements = self.model.get_EFEL_measurements(["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+        # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
 
-            params.measurements = measurements
-            # print("measurements.shape", measurements.shape)
-            error = np.abs(
-                (self.experimental_data - measurements))/np.abs(self.experimental_data)
-            # error = np.abs(
-            #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
-            # print("measurements.shape", error.shape)
-        except (IndexError, ValueError):
-            print("Error in measurement")
-            error = np.array([1000]*len(self.experimental_data))
-            # error = np.array([1000]*len(self.experimental_data[1:-2]))
+        params.measurements = measurements
+        # print("measurements.shape", measurements.shape)
+        error = np.abs(
+            (self.experimental_data - measurements))/np.abs(self.experimental_data)
+        # try:
+        #     self.model.setNonPassiveParams(params)
+        #     # getting measurement of model after parameter modification to be evaluated
+        #     measurements = self.model.get_EFEL_measurements(["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+        #     # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
+
+        #     params.measurements = measurements
+        #     # print("measurements.shape", measurements.shape)
+        #     error = np.abs(
+        #         (self.experimental_data - measurements))/np.abs(self.experimental_data)
+        #     # error = np.abs(
+        #     #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
+        #     # print("measurements.shape", error.shape)
+        # except (IndexError, ValueError):
+        #     print("Error in measurement")
+        #     error = np.array([1000]*len(self.experimental_data))
+        #     # error = np.array([1000]*len(self.experimental_data[1:-2]))
         # error =list(range(1,8))
         params.measurements_error = error
         params.total_indivedual_error = sum(list(error))
-
+        # print(error)
         # self.model.setCellParams(params)
         # # getting measurement of model after parameter modification to be evaluated
         # measurements = self.model.get_AP_measurements()
         # print(measurements.shape)
         # error = np.abs(
         #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
+       
         return list(error)
 
     def optimize(self, population_size=10, offspring_size=10, n_generations=100, plot=False):
@@ -115,8 +129,10 @@ class Nsga2Optimizer:
         # UPPER = [1.0]
         LOWER = list(self.parameters_boundaries[:, 0][0:6])
         UPPER = list(self.parameters_boundaries[:, 1][0:6])
-        OBJ_SIZE = 5
-        creator.create("Fitness", base.Fitness, weights=[-1.0] * OBJ_SIZE)
+        OBJ_SIZE = len(self.experimental_data)
+        weights = [-1.0]* OBJ_SIZE
+        # weights[0] = -2.0
+        creator.create("Fitness", base.Fitness, weights=weights)
         creator.create("Individual", Individual, fitness=creator.Fitness)
 
         self.toolbox = base.Toolbox()
@@ -172,14 +188,26 @@ class Nsga2Optimizer:
         # # eighth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
         # stats = tools.MultiStatistics(APHeight=first_stats, APWidth=second_stats, AHPDepth=third_stats, AHPDuration=fourth_stats,
         #                               AHPHalfDuration=fifth_stats, AHPHalfDecay=sixth_stats, AHPRisingTime=seventh_stats)
-        pop = self.toolbox.population(n=MU)
-
+        print(list(range(OBJ_SIZE)))
+        
+        # print(stats_list)
         first_stats = tools.Statistics(key=lambda ind: ind.fitness.values[0])
         second_stats = tools.Statistics(key=lambda ind: ind.fitness.values[1])
         third_stats = tools.Statistics(key=lambda ind: ind.fitness.values[2])
         fourth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[3])
         fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
-        stats = tools.MultiStatistics(AP_amplitude=first_stats,AP_height=second_stats, APWidth=third_stats, AHP_depth_abs=fourth_stats, AHP_time_from_peak=fifth_stats)
+        sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
+        seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
+       
+       
+        # stats_list = [tools.Statistics(key=lambda ind: ind.fitness.values[i]) for i in range(OBJ_SIZE)]
+        # stats_dict = dict(zip(self.model.EXPRIMENTAL_DATA[:,0],stats_list))
+        # stats = tools.MultiStatistics(**stats_dict)
+
+        # print(stats_dict)
+        # print(stats_dict)
+        stats = tools.MultiStatistics( Spikecount= first_stats,time_to_first_spike=second_stats,AP_amplitude=third_stats,AP_height=fourth_stats,
+         APWidth=fifth_stats, AHP_depth_abs=sixth_stats, AHP_time_from_peak=seventh_stats)
         stats.register("min_error", np.min, axis=0)
 
         # stats = deap.tools.Statistics(key=lambda ind: ind.fitness.values[0])
@@ -227,7 +255,7 @@ if __name__ == '__main__':
     # measurements = optimizer.model.get_AP_measurements()
     # print(optimizer.ErrorVectorNonPassive([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655]))
     pop, logbook = optimizer.optimize(
-        population_size=180, offspring_size=180, n_generations=70)
+        population_size=150, offspring_size=150, n_generations=60)
     # print(pop)
     # print(logbook)
     i =  0
