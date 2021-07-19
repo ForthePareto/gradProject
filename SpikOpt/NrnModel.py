@@ -3,17 +3,10 @@ from Model import Model
 from neuron import h
 from neuron.units import ms, mV
 import matplotlib.pyplot as plt
-from enum import Enum
 import pprint
 
 PRINTING = False
 
-
-class Level(Enum):
-    HIGH = 0.5
-    MID = 5.0
-    LOW = 10.0
-    VLOW = 50.0
 
 
 class NrnModel(Model):
@@ -25,14 +18,17 @@ class NrnModel(Model):
         self.compartments_list = None
         self.channels = None
         self.model_parameters = None
+        self.model_name = None
         self.setup(model_file, model_name)
 
     def setup(self, model_file: str, model_name: str = None):
         """loading the model hoc file, updates self.compartments_dict ,self.compartments_list """
         # loading the cell
+
         if model_name is None:
             raise ValueError("Model name must be passed")
         h.load_file(model_file)    # with no h current
+        self.model_name = model_name
         try:
             self.cell = getattr(h, model_name)()
         except:
@@ -45,11 +41,7 @@ class NrnModel(Model):
         # print(list(self.compartment_dict.keys()))
         # print(self.compartments_list[0].wholetree())
 
-    def runControler(self, TStop, init=-65):
-        h.load_file('stdrun.hoc')
-        h.finitialize(init * mV)
-        h.continuerun(TStop * ms)
-        # print(list(self.soma_v))
+    
 
     def GetParameters(self, printing=PRINTING):
         """ Returns model parameters dictionary with the following format:
@@ -131,7 +123,6 @@ class NrnModel(Model):
                 seg_num += 1
 
                 temp.append(mechs_pars)
-            print(seg_num)
             mechs_pars = []
             # temp.append(channels)
             seg_num = 0
@@ -191,6 +182,37 @@ class NrnModel(Model):
         segment_t = h.Vector().record(h._ref_t)  # record time.
         return segment_v, segment_t
 
+    def runControler(self, TStop, init=-65):
+        h.load_file('stdrun.hoc')
+        h.finitialize(init * mV)
+        h.continuerun(TStop * ms)
+        # print(list(self.soma_v))
+
+    def stimulateCell(self, clampAmp, duration, delay, Tstop,stimSeg,recordSec, clampAt=0.5,recordAt =0.5 , init=-65):
+        """ Stimulate the cell with the supplied properties
+            Args:
+            :param clampAmp: the current value at which the cell is stimulated (in nA)
+            :param duration: the time for which the stimulation is continued
+            :param delay: the time at which the stimulation is started
+            :param stimSeg: the segment at which the cell is stimulated
+            :param clampAt: the location in the segment at which clamp is inserted
+            :param Tstop: the duration for which the recording is done
+            :param init: the resting membrane voltage of the cell
+
+        :return volt: the recorded voltage vector
+        :return t: the recorded time vector
+
+         """
+        stim = self.setIClamp(delay, duration, clampAmp,
+                              segment=self.get_compartement(stimSeg), position=clampAt)
+        volt, t = self.recordVolt(self.get_compartement(recordSec), recordAt)
+        self.runControler(TStop=Tstop, init=-65)
+
+        return volt, t
+
+    def __repr__(self):
+        return f"Model  {self.model_name} with Kinetecs \n {list(self.get_all_compartments().keys())} \n  \n And  with parameters: \n {self.get_model_parameters()}  "
+
 
 if __name__ == '__main__':
     from hoc2swc import hoc2swc
@@ -198,9 +220,11 @@ if __name__ == '__main__':
     # hoc2swc("5CompMy_temp.hoc", "out.swc")
     model = NrnModel("5CompMy_temp.hoc", "fivecompMy")
     # model.get_model_parameters()
-    model.get_compartments_channels(printing=False)
-    print(model.get_model_parameters(printing=False)[
-          "fivecompMy[0].soma"]["morphology"]['diam'][0])
+    # model.get_compartments_channels(printing=False)
+    # print(model.get_model_parameters(printing=False)[
+    #       "fivecompMy[0].soma"]["morphology"]['diam'][0])
+    pp = pprint.PrettyPrinter()
+    pp.pprint(model)
     # print(model.get_compartement("soma"))
     # pp = pprint.PrettyPrinter()
     # for seg in model.compartments_list[0]:

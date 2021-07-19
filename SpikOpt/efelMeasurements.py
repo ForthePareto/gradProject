@@ -3,15 +3,48 @@ import efel
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+from collections import OrderedDict
+
+
+EFEL_NAME_MAP = {"Input Resistance": "ohmic_input_resistance",
+                 "AP Amplitude": "AP_amplitude",
+                 "AP Height": "AP_height",
+                 "AP Width": "AP_width",
+                 "AHP Absolute Depth": "AHP_depth_abs",
+                 "AHP Duration": "AHPDuration",
+                 "AHP time from peak": "AHP_time_from_peak",
+                 "Spikecount": "Spikecount",
+                 "Time to First Spike": "time_to_first_spike",
+                 }
+EFEL2NAME_MAP = {v: k for k, v in EFEL_NAME_MAP.items()}
+
+
+def _zero_valued_dict(keys):
+    return dict.fromkeys(keys, 0)
 
 
 class EfelMeasurements():
-    def __init__(self, model=None, modelHocFile: str = "5CompMy_temp.hoc"):
+    def __init__(self, model, config):
 
-        self.model = model if(model is not None) else NrnModel(modelHocFile)
-        self.soma = self.model.soma
-        self.iseg = self.model.iseg
+        self.cell = model
+        self.volt = None
+        self.t = None
+        self.delay = None
+        self.duration = None
+        self.Tstop = None
+        self._setup(config)
         self.trace = {}
+
+    def setup(self, config):
+        self.volt, self.t = self.cell.stimulateCell(
+            float(config["Amplitude"]), float(
+                config["Duration"]), float(config["Delay"]),
+            float(
+                config["T stop"]), config["Stimulus Section"], config["Recording Section"],
+            clampAt=float(config["Stimulus Position"]), recordAt=float(config["Recording Position"]), init=float(config["Vinit"]))
+        self.delay = float(config["Delay"])
+        self.duration = float(config["Duration"])
+        self.Tstop = float(config["T stop"])
 
     def closeMatches(self, lst: list, findVal, tolerance):
         """ find a list of closest matches to a specific value with a spicified tolerance
@@ -42,46 +75,56 @@ class EfelMeasurements():
         :return t: the recorded time vector
 
         """
-        stim = self.model.setIClamp(
-            delay, duration, clampAmp, segment=stimSeg, position=clampAt)
-        volt, t = self.model.recordVolt(self.model.soma, 0.5)
-        self.model.runControler(TStop=Tstop, init=-65)
-        self.volt, self.t = volt, t
-        import numpy as np
-        temp = []
-        # print(int(volt.size()))
-        # for n in range(int(volt.size())):
-        #     temp.append(volt.x[n])
-        # print(np.array(temp))
-        # print(len(temp))
-        # self.model.graphVolt(volt, t,"trace").show()
-        # print( self.closeMatches(t,delay,0.7))
-        start =  sorted(self.closeMatches(t,delay,0.025),key=lambda x: x[0])[0][0]        
-        end =  sorted(self.closeMatches(t,delay+duration,0.025),key=lambda x: x[0])[0][0]         
+
+        # start =  sorted(self.closeMatches(self.t,delay,0.025),key=lambda x: x[0])[0][0]
+        # end =  sorted(self.closeMatches(self.t,delay+duration,0.025),key=lambda x: x[0])[0][0]
         # print(t[2]-t[1])
-        print(start)
-        print(end)
-        self.trace['T'] = t
-        self.trace['V'] = volt
+        efel.setDoubleSetting('stimulus_current', current)
+        efel.setIntSetting("strict_stiminterval", True)
+        self.trace['T'] = self.t
+        self.trace['V'] = self.volt
         # self.trace['stim_start'] = [delay-10]
         # self.trace['stim_end']  = [500]
-        self.trace['stim_start'] = [start]
-        self.trace['stim_end'] = [delay+5]
+        self.trace['stim_start'] = [self.delay]
+        self.trace['stim_end'] = [self.Tstop]
 
-        return volt, t
+        return self.volt, self.t
 
     def getMeasurements(self, featureNames: list):
         traces = [self.trace]
+        efel_feature_names = []
+        for fName in featureNames:
+            if fName not in list(EFEL_NAME_MAP.keys()):
+                raise ValueError(
+                    f" Feature: '{fName}' is not availabe in Efel or not spelled well")
+            efel_feature_names.append(EFEL_NAME_MAP[fName])
 
-        traces_results = efel.getFeatureValues(traces, featureNames)
+        traces_results = efel.getFeatureValues(traces, efel_feature_names)
+        self.measurements = OrderedDict()
+        check_peaks = efel.getFeatureValues(traces, ["Spikecount_stimint"])
+        if check_peaks[0]["Spikecount_stimint"][0] == 0:
+            return _zero_valued_dict(featureNames)
 
-        # The return value is a list of trace_results, every trace_results
-        # corresponds to one trace in the 'traces' list above (in same order)
+        traces_results = efel.getFeatureValues(traces, efel_feature_names)
+        if traces_results[0]["AP_amplitude"] is None:
+            # print("efel failed",len(traces_results[0]["AP_amplitude"]) , len(traces_results[0]["AP_height"]))
+            print(f"n spikes are {check_peaks[0]['Spikecount_stimint'][0]}")
+            return _zero_valued_dict(featureNames)
+
         for trace_results in traces_results:
             # trace_result is a dictionary, with as keys the requested eFeatures
+
             for feature_name, feature_values in trace_results.items():
-                print("Feature %s has the following values: %s" %
-                      (feature_name, ', '.join([str(x) for x in feature_values])))
+
+                if len(feature_values) > 0:
+
+                    self.measurements[EFEL2NAME_MAP[feature_name]
+                                      ] = feature_values[0]
+                else:
+                    print(f"{feature_name} failed")
+                    self.measurements[EFEL2NAME_MAP[feature_name]] = 0
+
+        return self.measurements
 
 
 if __name__ == '__main__':

@@ -38,9 +38,6 @@ def uniform(lower_list, upper_list, dimensions):
 def ErrorVectorNonPassive( params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
-        # global N
-        # print(N)
-        # N  += 1
         # passing a solution of parameters to the cell model
         model = FiveCompModel()
         model.setNonPassiveParams(params)
@@ -59,10 +56,11 @@ def ErrorVectorNonPassive( params):
         params.total_indivedual_error = sum(list(error))
         
         return list(error)
+
+
 model = FiveCompModel()
 experimental_data = np.copy(model.get_exprimental_data())  # done
 parameters_boundaries = np.copy(model.get_parameters_boundaries())  # done
-
 del model
 best_solution = None
 best_score = None
@@ -90,9 +88,6 @@ MUTPB = 0.3
 ETA = 10.0
 
 IND_SIZE = len(parameters_boundaries[:, 0][0:6])
-
-# LOWER = [0.0]
-# UPPER = [1.0]
 LOWER = list(parameters_boundaries[:, 0][0:6])
 UPPER = list(parameters_boundaries[:, 1][0:6])
 OBJ_SIZE = len(experimental_data)
@@ -165,17 +160,11 @@ seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
 stats = tools.MultiStatistics( Spikecount= first_stats,time_to_first_spike=second_stats,AP_amplitude=third_stats,AP_height=fourth_stats,
     APWidth=fifth_stats, AHP_depth_abs=sixth_stats, AHP_time_from_peak=seventh_stats)
 stats.register("min_error", np.min, axis=0)
-# h.quit()
-# stats = deap.tools.Statistics(key=lambda ind: ind.fitness.values[0])
-# stats.register("avg", np.mean)
-# stats.register("std", np.std)
-# stats.register("min", np.min)
-# stats.register("max", np.max)
+stats.register("avg_error", np.std, axis=0)
+stats.register("std_of_error", np.std, axis=0)
 
-if __name__ == '__main__':
-    cell_model = 5
-    
-    
+
+def parallel_Nsga2():
     print("start Time =",  datetime.now().strftime("%H:%M:%S"))
     pop = toolbox.population(n=MU)
    
@@ -223,3 +212,11 @@ if __name__ == '__main__':
     # print("best solution is   ",pop[best_sol_idx], )
     # print("with errors :   ",list( map(lambda ind: ind.measurements_error, pop))[best_sol_idx], )
     # print(f"with total error {list(errors)[best_sol_idx]}")
+
+
+
+if __name__ == '__main__':
+    parallel_Nsga2()
+    
+    
+   
