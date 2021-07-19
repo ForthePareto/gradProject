@@ -177,7 +177,7 @@ proc createCell(){
         ghbar_hb1 = 0.002/7				
 
     }
-    print "5 compartment cell created"
+    // print "5 compartment cell created"
 }
 
 objref all, somatic, basal , AHIS
