@@ -1,5 +1,4 @@
 from datetime import datetime
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import functools
@@ -10,20 +9,46 @@ from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
-import Selector
 from fiveCompModel import FiveCompModel
 from algorithms import eaAlphaMuPlusLambdaCheckpoint, WSListIndividual
 np.random.seed(1)
 
 N = 0
 
+
+
+
 class Nsga2Optimizer:
+    NGEN = 50
+    POP_SIZE = 100
+    OFFSPRING_SIZE = 100
+    MUTATION_PROP = 0.3
+    SEED = 1 
     def __init__(self, model):
+        self.N_generations = Nsga2Optimizer.NGEN
+        self.population_size = Nsga2Optimizer.POP_SIZE
+        self.offspring_size = Nsga2Optimizer.OFFSPRING_SIZE
+        self.mutation_probability = Nsga2Optimizer.MUTATION_PROP
+        self.crossover_probability = 1 - Nsga2Optimizer
+        self.random_seed = Nsga2Optimizer.SEED
+
+        ############################33
         self.model = model
         self.experimental_data = model.get_exprimental_data()  # done
         self.parameters_boundaries = model.get_parameters_boundaries()  # done
         self.best_solution = None
         self.best_score = None
+
+    def setup(self,config):
+        self.N_generations = config.get('Number of Generations',Nsga2Optimizer.NGEN)
+        self.population_size = config.get('Population Size', Nsga2Optimizer.POP_SIZE)
+        self.offspring_size = config.get('Offspring Size',Nsga2Optimizer.OFFSPRING_SIZE)
+        self.mutation_probability = config.get('Mutation Probability',Nsga2Optimizer.MUTATION_PROP)
+        self.crossover_probability = 1- self.mutation_prob
+        self.random_seed = config.get('Number of generations',Nsga2Optimizer.SEED)
+
+    def set_random_seed(self,seed: int):
+        self.random_seed = seed
 
     def evaluate(self, params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
@@ -57,16 +82,11 @@ class Nsga2Optimizer:
     def ErrorVectorNonPassive(self, params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
-        # global N
-        # print(N)
-        # N  += 1
-        # passing a solution of parameters to the cell model
+        
         simulator = Simulator(config)
         simulator.model.set_parameters(params)
         # getting measurement of model after parameter modification to be evaluated
         measurements = simulator.get_measurements(["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
-        # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
-
         params.measurements = measurements
         # print("measurements.shape", measurements.shape)
         error = np.abs(
