@@ -27,7 +27,7 @@ class EfelMeasurements():
     def __init__(self, model, config):
 
         self.cell = model
-        self.volt = None
+        self.voltage = None
         self.t = None
         self.delay = None
         self.duration = None
@@ -36,7 +36,7 @@ class EfelMeasurements():
         self.trace = {}
 
     def setup(self, config):
-        self.volt, self.t = self.cell.stimulateCell(
+        self.voltage, self.t = self.cell.stimulateCell(
             float(config["Amplitude"]), float(
                 config["Duration"]), float(config["Delay"]),
             float(
@@ -45,59 +45,25 @@ class EfelMeasurements():
         self.delay = float(config["Delay"])
         self.duration = float(config["Duration"])
         self.Tstop = float(config["T stop"])
+        self._initialize()
 
-    def closeMatches(self, lst: list, findVal, tolerance):
-        """ find a list of closest matches to a specific value with a spicified tolerance
-            Args:
-                :param lst: target list to search into
-                :param findVal: target value
-                :param tolerance: accepted error in matches
-            :return: list of (value,index) pairs
-        """
-        # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
-        matches = [(val, index) for index, val in enumerate(lst)
-                   if math.isclose(val, findVal, abs_tol=tolerance)]
-
-        return matches
-
-    def stimulateCell(self, clampAmp, duration, delay, stimSeg, clampAt, Tstop, init=-65):
-        """ Stimulate the cell with the supplied properties
-            Args:
-            :param clampAmp: the current value at which the cell is stimulated (in nA)
-            :param duration: the time for which the stimulation is continued
-            :param delay: the time at which the stimulation is started
-            :param stimSeg: the segment at which the cell is stimulated
-            :param clampAt: the location in the segment at which clamp is inserted
-            :param Tstop: the duration for which the recording is done
-            :param init: the resting membrane voltage of the cell
-
-        :return volt: the recorded voltage vector
-        :return t: the recorded time vector
-
-        """
-
-        # start =  sorted(self.closeMatches(self.t,delay,0.025),key=lambda x: x[0])[0][0]
-        # end =  sorted(self.closeMatches(self.t,delay+duration,0.025),key=lambda x: x[0])[0][0]
+    def _initialize(self):
+        # start =  sorted(self._closeMatches(self.t,delay,0.025),key=lambda x: x[0])[0][0]
+        # end =  sorted(self._closeMatches(self.t,delay+duration,0.025),key=lambda x: x[0])[0][0]
         # print(t[2]-t[1])
         efel.setDoubleSetting('stimulus_current', current)
         efel.setIntSetting("strict_stiminterval", True)
         self.trace['T'] = self.t
-        self.trace['V'] = self.volt
-        # self.trace['stim_start'] = [delay-10]
-        # self.trace['stim_end']  = [500]
-        self.trace['stim_start'] = [self.delay]
+        self.trace['V'] = self.voltage
+        # max because delay may be less than 5ms
+        self.trace['stim_start'] = [max(self.delay-5, 0)]
         self.trace['stim_end'] = [self.Tstop]
 
-        return self.volt, self.t
+        return self.voltage, self.t
 
-    def getMeasurements(self, featureNames: list):
+    def get_measurements(self, featureNames: list):
         traces = [self.trace]
-        efel_feature_names = []
-        for fName in featureNames:
-            if fName not in list(EFEL_NAME_MAP.keys()):
-                raise ValueError(
-                    f" Feature: '{fName}' is not availabe in Efel or not spelled well")
-            efel_feature_names.append(EFEL_NAME_MAP[fName])
+        efel_feature_names = self._convert_to_efel_names(featureNames)
 
         traces_results = efel.getFeatureValues(traces, efel_feature_names)
         self.measurements = OrderedDict()
@@ -113,11 +79,8 @@ class EfelMeasurements():
 
         for trace_results in traces_results:
             # trace_result is a dictionary, with as keys the requested eFeatures
-
             for feature_name, feature_values in trace_results.items():
-
                 if len(feature_values) > 0:
-
                     self.measurements[EFEL2NAME_MAP[feature_name]
                                       ] = feature_values[0]
                 else:
@@ -125,6 +88,29 @@ class EfelMeasurements():
                     self.measurements[EFEL2NAME_MAP[feature_name]] = 0
 
         return self.measurements
+
+    def _closeMatches(self, lst: list, findVal, tolerance):
+        """ find a list of closest matches to a specific value with a spicified tolerance
+            Args:
+                :param lst: target list to search into
+                :param findVal: target value
+                :param tolerance: accepted error in matches
+            :return: list of (value,index) pairs
+        """
+        # matches = [(val,index) for index,val in enumerate(lst) if abs(val - findVal) < tolerance]
+        matches = [(val, index) for index, val in enumerate(lst)
+                   if math.isclose(val, findVal, abs_tol=tolerance)]
+
+        return matches
+
+    def _convert_to_efel_names(self, regular_feature_names: list):
+        efel_feature_names = []
+        for fName in regular_feature_names:
+            if fName not in list(EFEL_NAME_MAP.keys()):
+                raise ValueError(
+                    f" Feature: '{fName}' is not availabe in Efel or not spelled well")
+            efel_feature_names.append(EFEL_NAME_MAP[fName])
+        return efel_feature_names
 
 
 if __name__ == '__main__':
@@ -141,10 +127,10 @@ if __name__ == '__main__':
         testEFEL = EfelMeasurements()
         testEFEL.stimulateCell(current, duration, delay,
                                testEFEL.iseg, 0.5, 500)
-        testEFEL.getMeasurements(["Spikecount", "time_to_first_spike", "AP_amplitude",
+        testEFEL.get_measurements(["Spikecount", "time_to_first_spike", "AP_amplitude",
                                   "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak"])
 
         testEFEL.model.graphVolt(
-            testEFEL.volt, testEFEL.t, "trace", ax, color=np.random.rand(3,))
+            testEFEL.voltage, testEFEL.t, "trace", ax, color=np.random.rand(3,))
         # ax.set_color("red")
     plt.show()

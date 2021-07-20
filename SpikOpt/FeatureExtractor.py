@@ -33,7 +33,7 @@ NAME_MAP = {"Input Resistance": "inputResistance",
 class FeatureExtractor:
     def __init__(self, model,config):
         self.cell = model
-        self.trace = None
+        self.voltage = None
         self.t = None
         self.delay = None
         self.duration = None
@@ -41,7 +41,7 @@ class FeatureExtractor:
 
     def _setup(self, config):
 
-        self.trace, self.t = self.cell.stimulateCell(
+        self.voltage, self.t = self.cell.stimulateCell(
             float(config["Amplitude"]), float(
                 config["Duration"]), float(config["Delay"]),
             float(
@@ -676,7 +676,7 @@ class FeatureExtractor:
     def get_measurements(self, requested_measurments: list):
         delay = self.delay
         duration = self.duration
-        volt = self.trace
+        volt = self.voltage
         t = self.t
 
         self.measurements = OrderedDict()

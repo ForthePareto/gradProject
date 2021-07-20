@@ -21,36 +21,7 @@ class Simulator():
         else:
             raise NotImplementedError(
                 f"only {SUPPORTED_MODEL_TYPES} are supported")
-        # self.soma = self.model.soma
-        # self.iseg = self.model.iseg
-        # self.dendrites = self.model.dendrites
-        self.EXPRIMENTAL_DATA = np.array([["input resistance", 1.26],
-                                          ['AP Height', 81.48],
-                                          ["AP Width", 1.02],
-                                          ["AHP Depth", 5.31],
-                                          ["AHP Duration", 64.82],
-                                          ["AHP Half-Duration", 36.82],
-                                          ["AHP Half-Decay", 26.75],
-                                          ["AHP Rising-Time", 11.27],
-                                          ["Rheobase", 7.88],
-                                          ["time constant", 6.25]])
-        # efel data
-        self.EXPRIMENTAL_DATA = np.array(
-            [["AP_amplitude", 80.414],
-             ["AP_height", 14.527],
-                ['AP_width', 0.8],
-                ["AHP_depth_abs", -70.28],
-                ["AHP_time_from_peak", 16.3],
-             ])
-        self.measurements = np.zeros((9))
-
-        self.trace = {}
-
-        # self.Parmeters_boundaries = {"conductance": [0, 1]}
-        # self.xlSheet = None
-        # self.row = None
-        # self.col = None
-        # self.xlSheetInit()
+        
     def fetch_model_parameters(self) -> OrderedDict:
         return self.model.get_model_parameters()
 
