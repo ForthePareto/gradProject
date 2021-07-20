@@ -8,7 +8,8 @@ from efelMeasurements import EfelMeasurements
 import efel
 from collections import OrderedDict
 from Model import Plotter, Level
-
+from efelMeasurements import EfelMeasurements
+from FeatureExtractor import FeatureExtractor
 PLOTTING = False
 PRINTING = False
 SUPPORTED_MODEL_TYPES = ['Nmodel']
@@ -21,12 +22,37 @@ class Simulator():
         else:
             raise NotImplementedError(
                 f"only {SUPPORTED_MODEL_TYPES} are supported")
+        self.stimulus_protocol = None
+        self.requested_measurments = None
+        
         
     def fetch_model_parameters(self) -> OrderedDict:
         return self.model.get_model_parameters()
 
     def fetch_model_channels(self) -> OrderedDict:
         return self.model.get_compartments_channels()
+
+    def set_model_parameters(self,parameters: list): #list of ordered Dictionary [[location: soma, name: g_pas, value:0.001],  [location, name, value]  ]
+        if (not isinstance(parameters,list)) or (len(parameters)==0):
+            raise ValueError("Parameters to be set must be a list of size > 0")
+
+        if not isinstance(parameters[0],OrderedDict):
+            raise TypeError("Each parameter must be of type OrderedDict e.g [location: soma, name: g_pas, value:0.001]")
+        for parameter in parameters:
+            self.model.set_parameter(*list(parameter.values()))
+
+    def get_measurements(self,protocol: dict, requested_measurments: list, measurer: str = "efel") -> OrderedDict:
+        #TODO: ReFactor the names of theses classes, add rheobase,rin,tau to efel
+        self.stimulus_protocol = protocol
+        self.requested_measurments = requested_measurments 
+        if measurer.lower()  == "efel":
+            feature_extractor = EfelMeasurements(self.model,protocol)
+        elif measurer.lower() == "spikeanalyzer":
+            feature_extractor = FeatureExtractor(self.model,protocol)
+        else :
+            raise ValueError("Thr Requested Measurer is not supported") 
+        return feature_extractor.get_measurements(requested_measurments,protocol)
+
 
     
 

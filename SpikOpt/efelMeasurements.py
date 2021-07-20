@@ -32,9 +32,9 @@ class EfelMeasurements():
         self.delay = None
         self.duration = None
         self.Tstop = None
-        self._setup(config)
         self.trace = {}
-
+        self._setup(config)
+        
     def setup(self, config):
         self.voltage, self.t = self.cell.stimulateCell(
             float(config["Amplitude"]), float(

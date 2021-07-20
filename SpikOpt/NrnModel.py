@@ -10,6 +10,7 @@ PRINTING = False
 
 
 class NrnModel(Model):
+    GLOBAL_PARAMS = [""]  #i.e accessed by h.param
     def __init__(self, model_file: str, model_name: str):
         if model_name is None:
             raise ValueError(
@@ -162,13 +163,37 @@ class NrnModel(Model):
             compartement = self._get_model_name() + "." + compartement
         return self.compartments_dict.get(compartement)
 
+    def set_parameter(self,section_name: str, parameter_name: str , value: float):
+        """
+        set_parameter [summary]
+
+        Parameters
+        ----------
+        section_name : str
+            [description]
+        parameter_type : str
+            [description]
+        parameter_name : str
+            [description]
+        value : float
+            [description]
+        """
+        section = self.get_section(section_name)
+        if section_name == "GLOBAL" :
+            #example h.th_NafSmb1
+            parameter = getattr(h,parameter_name)
+            parameter = value
+        else:
+            parameter = getattr(section,parameter_name)
+            parameter = value
+
+
     def _get_model_name(self) -> str:
         return list(self.compartments_dict.keys())[0].split(".")[0]
 
     def setIClamp(self, delay, duration, amp, segment, position):
         """Add a current clamp at {position} of {segment}"""
         stim = h.IClamp(segment(position))
-
         stim.delay = delay           # ms
         stim.dur = duration        # ms
         stim.amp = amp             # nA
