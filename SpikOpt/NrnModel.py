@@ -20,9 +20,9 @@ class NrnModel(Model):
         self.channels = None
         self.model_parameters = None
         self.model_name = None
-        self.setup(model_file, model_name)
+        self._setup(model_file, model_name)
 
-    def setup(self, model_file: str, model_name: str = None):
+    def _setup(self, model_file: str, model_name: str = None):
         """loading the model hoc file, updates self.compartments_dict ,self.compartments_list """
         # loading the cell
 

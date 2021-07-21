@@ -4,9 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from collections import OrderedDict
+from enum import Enum
+import warnings
+class Level(Enum):
+    HIGH = 0.5
+    MID = 5.0
+    LOW = 10.0
+    VLOW = 50.0
 
 
-EFEL_NAME_MAP = {"Input Resistance": "ohmic_input_resistance",
+EFEL_NAME_MAP = {
                  "AP Amplitude": "AP_amplitude",
                  "AP Height": "AP_height",
                  "AP Width": "AP_width",
@@ -34,7 +41,7 @@ class EfelMeasurements():
         self.Tstop = None
         self.trace = {}
         self._setup(config)
-        
+
     def setup(self, config):
         self.voltage, self.t = self.cell.stimulateCell(
             float(config["Amplitude"]), float(
@@ -61,32 +68,49 @@ class EfelMeasurements():
 
         return self.voltage, self.t
 
-    def get_measurements(self, featureNames: list):
+    def get_measurements(self, outputDict: dict,featureNames: list):
         traces = [self.trace]
         efel_feature_names = self._convert_to_efel_names(featureNames)
-
-        traces_results = efel.getFeatureValues(traces, efel_feature_names)
-        self.measurements = OrderedDict()
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
         check_peaks = efel.getFeatureValues(traces, ["Spikecount_stimint"])
         if check_peaks[0]["Spikecount_stimint"][0] == 0:
             return _zero_valued_dict(featureNames)
 
-        traces_results = efel.getFeatureValues(traces, efel_feature_names)
-        if traces_results[0]["AP_amplitude"] is None:
+        amplitudes = efel.getFeatureValues(traces, ["AP_amplitude"])
+        if (amplitudes[0]["AP_amplitude"] is None):
             # print("efel failed",len(traces_results[0]["AP_amplitude"]) , len(traces_results[0]["AP_height"]))
             print(f"n spikes are {check_peaks[0]['Spikecount_stimint'][0]}")
             return _zero_valued_dict(featureNames)
 
+
+        traces_results = efel.getFeatureValues(traces, efel_feature_names)
+        warnings.filterwarnings("default", category=RuntimeWarning)
         for trace_results in traces_results:
             # trace_result is a dictionary, with as keys the requested eFeatures
             for feature_name, feature_values in trace_results.items():
                 if len(feature_values) > 0:
-                    self.measurements[EFEL2NAME_MAP[feature_name]
-                                      ] = feature_values[0]
+                    outputDict[EFEL2NAME_MAP[feature_name]
+                                      ] = np.mean(feature_values)
                 else:
                     print(f"{feature_name} failed")
-                    self.measurements[EFEL2NAME_MAP[feature_name]] = 0
+                    print(f"{feature_name} equals {feature_values}")
+                    outputDict[EFEL2NAME_MAP[feature_name]] = 0
+        if "Time to First Spike" in list(outputDict.keys()):
+            if outputDict["Time to First Spike"] !=0:
+                outputDict["Time to First Spike"] +=self.delay
 
+        self.measurements = outputDict
+
+        # for name in featureNames:
+        #     if name  == "Input Resistance":
+        #         self.measurements[name] = self.inputResistance(-0.5,
+        #                                                           plotting=False, printing=False)
+        #     elif name == "Rheobase":
+        #         self.measurements[name] = self.Rheobase(
+        #             Level.VLOW, 1, plotting=False, printing=False)
+        #     elif name == "Time Constant":
+        #         self.measurements[name] = self.timeConstant(
+        #             -0.5, plotting=False, printing=False)
         return self.measurements
 
     def _closeMatches(self, lst: list, findVal, tolerance):
@@ -128,7 +152,7 @@ if __name__ == '__main__':
         testEFEL.stimulateCell(current, duration, delay,
                                testEFEL.iseg, 0.5, 500)
         testEFEL.get_measurements(["Spikecount", "time_to_first_spike", "AP_amplitude",
-                                  "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak"])
+                                   "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak"])
 
         testEFEL.model.graphVolt(
             testEFEL.voltage, testEFEL.t, "trace", ax, color=np.random.rand(3,))

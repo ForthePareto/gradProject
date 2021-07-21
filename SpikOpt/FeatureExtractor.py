@@ -673,29 +673,27 @@ class FeatureExtractor:
             plt.close()
         return (abs(max(volt) - min(volt)) >= accuracy.value)
 
-    def get_measurements(self, requested_measurments: list):
+    def get_measurements(self, outputDict: dict,requested_measurments: list):
         delay = self.delay
         duration = self.duration
         volt = self.voltage
         t = self.t
-
-        self.measurements = OrderedDict()
 
         for feature in requested_measurments:
             if feature not in list(NAME_MAP.keys()):
                 raise ValueError(
                     f" Feature: '{feature}' is not implemented or not spelled well")
             if NAME_MAP[feature] == "inputResistance":
-                self.measurements[feature] = self.inputResistance(-0.5,
+                outputDict[feature] = self.inputResistance(-0.5,
                                                                   plotting=False, printing=False)
             elif NAME_MAP[feature] == "Rheobase":
-                self.measurements[feature] = self.Rheobase(
+                outputDict[feature] = self.Rheobase(
                     Level.VLOW, 1, plotting=False, printing=False)
             elif NAME_MAP[feature] == "timeConstant":
-                self.measurements[feature] = self.timeConstant(
+                outputDict[feature] = self.timeConstant(
                     -0.5, plotting=False, printing=False)
             else:
-                self.measurements[feature] = getattr(self, NAME_MAP[feature])(
+                outputDict[feature] = getattr(self, NAME_MAP[feature])(
                     volt, t, delay, duration, plotting=False, printing=False)
-
-        return self.measurements
+        self.measurements = outputDict
+        return outputDict
