@@ -18,7 +18,7 @@ class Level(Enum):
 
 NAME_MAP = {"Input Resistance": "inputResistance",
             "Average Input Resistance": "avgInRes",
-            "time Constant": "timeConstant",
+            "Time Constant": "timeConstant",
             "Rheobase": "Rheobase",
             "AP Amplitude": "APHeight",
             "AP Width": "APWidth",

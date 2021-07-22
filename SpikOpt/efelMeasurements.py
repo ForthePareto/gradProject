@@ -12,13 +12,11 @@ class Level(Enum):
     LOW = 10.0
     VLOW = 50.0
 
-
 EFEL_NAME_MAP = {
                  "AP Amplitude": "AP_amplitude",
                  "AP Height": "AP_height",
                  "AP Width": "AP_width",
                  "AHP Absolute Depth": "AHP_depth_abs",
-                 "AHP Duration": "AHPDuration",
                  "AHP time from peak": "AHP_time_from_peak",
                  "Spikecount": "Spikecount",
                  "Time to First Spike": "time_to_first_spike",
