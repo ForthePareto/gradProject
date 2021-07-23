@@ -9,10 +9,10 @@ from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
+import pickle
 from Simulator import Simulator
-from Fitter import Fitter
 np.random.seed(1)
-
+from copy import deepcopy
 N = 0
 
 
@@ -28,13 +28,15 @@ class Nsga2Optimizer:
         self.population_size = Nsga2Optimizer.POP_SIZE
         self.offspring_size = Nsga2Optimizer.OFFSPRING_SIZE
         self.mutation_probability = Nsga2Optimizer.MUTATION_PROP
-        self.crossover_probability = 1 - Nsga2Optimizer
+        # self.crossover_probability = 1 - Nsga2Optimizer
         self.random_seed = Nsga2Optimizer.SEED
+        self.pop = None
+        self.logbook = None
 
         self.model_meta_data = None
         self.parameters_info = None
         self.stimulation_protocol = None
-        self.exprimental_data = None
+        self.experimental_data = None
 
         self.best_solution = None
         self.best_score = None
@@ -45,14 +47,19 @@ class Nsga2Optimizer:
         self._set_config("model_meta_data",
                          config.get("model_meta_data", None))
         # OrderedDict{"name": {"location":"","low":"","high":""} }
+        # List [{"location": "", "name":" ","value":0.0,"low":"",high:""} ]
         self._set_config("parameters_info",
                          config.get("parameters_info", None))
+
         # {"Protocol Name": "IClamp", "Stimulus Type":"Step" , "Amplitude":"21",...}
         self._set_config("stimulation_protocol",
                          config.get("stimulation_protocol", None))
-        # OrderedDict{"name": {"wieght":"","mean":"","std":""} }
-        self._set_config("exprimental_data",
-                         config.get("exprimental_data", None))
+        # OrderedDict{"name": {"weight":"","mean":"","std":""} }
+        self._set_config("experimental_data",
+                         config.get("experimental_data", None))
+        self.simulator = Simulator(
+            self.model_meta_data["model_type"], self.model_meta_data["model_file"], self.model_meta_data["model_name"])
+        
 
     def _set_Nsga_config(self, config):
         self.N_generations = config.get(
@@ -65,109 +72,75 @@ class Nsga2Optimizer:
             'Mutation Probability', Nsga2Optimizer.MUTATION_PROP)
         self.crossover_probability = 1 - self.mutation_probability
         self.random_seed = config.get(
-            'Number of generations', Nsga2Optimizer.SEED)
-
+            'Random Seed', Nsga2Optimizer.SEED)
     def _set_config(self, config_name: str, config):
-        config_type = "OrdereDict" if config_name in [
-            "parameters_info", "exprimental_data"] else "Dictionary"
-        if (config is None) or (not isinstance(config, dict)):
+        
+        CONFIGs_Structure_types = {"Optimizer":dict,"stimulation_protocol":dict,"model_meta_data":dict
+                ,"parameters_info":list,"experimental_data":OrderedDict}
+        # print(config)
+        if (config is None)  :
             raise ValueError(
-                f"{config_name} information must be provided in a {config_type} to the configration of the optimizer, so it can be used in every evaluation")
-        else:
-            attribute = getattr(self, config_name)
-            attribute = config
-
+                f"{config_name} information must be provided in a {CONFIGs_Structure_types[config_name]} to the configration of the optimizer, so it can be used in every evaluation")
+        else: 
+            setattr(self, config_name,config)  
+            # if isinstance(config,list):
+            #     getattr(self, config_name) =[val for val in config ] 
+                
+            # else:
+            #     getattr(self, config_name) = deepcopy(config)
+    
+    
     def set_random_seed(self, seed: int):
         self.random_seed = seed
 
     def evaluate(self, params):
         """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
         """
-        simulator = Simulator(**self.model_meta_data)
-        simulator.set_model_parameters(params)
-        simulator_measurements = simulator.get_measurements(
-            self.stimulation_protocol, list(self.requested_measurments.keys()))
+        # self.simulator = Simulator(
+        #     self.model_meta_data["model_type"], self.model_meta_data["model_file"], self.model_meta_data["model_name"])
+        if len(params) != len(self.parameters_info):
+            raise ValueError(
+                "indivedual size is not equal to request parameters size")
+        for i in range(len(self.parameters_info)):
+            self.parameters_info[i]["value"] = params[i]
+            # print(self.parameters_info[i]["value"])
+
+        self.simulator.set_model_parameters(self.parameters_info)
+        simulator_measurements = self.simulator.get_measurements(
+            self.stimulation_protocol, list(self.experimental_data.keys()))
         errors = []
         for measurement in list(self.experimental_data.keys()):
-            errors.append(abs(self.experimental_data[measurement]["mean"] -
-                              simulator_measurements[measurement])/self.experimental_data[measurement]["std"])
+            if self.experimental_data[measurement]["std"] is not None:
+                errors.append(abs(self.experimental_data[measurement]["mean"] -
+                                  simulator_measurements[measurement])/self.experimental_data[measurement]["std"])
+            else:
+                errors.append(abs(self.experimental_data[measurement]["mean"] -
+                                  simulator_measurements[measurement])/self.experimental_data[measurement]["mean"])
         
-    
         return errors
-
-    def ErrorVectorNonPassive(self, params):
-        """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
-        """
-
-        # getting measurement of model after parameter modification to be evaluated
-        measurements = ["Spikecount", "time_to_first_spike", "AP_amplitude",
-                        "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak"]
-        params.measurements = measurements
-        # print("measurements.shape", measurements.shape)
-        error = np.abs(
-            (self.experimental_data - measurements))/np.abs(self.experimental_data)
-        # try:
-        #     self.model.setNonPassiveParams(params)
-        #     # getting measurement of model after parameter modification to be evaluated
-        #     measurements = self.model.get_EFEL_measurements(["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
-        #     # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
-
-        #     params.measurements = measurements
-        #     # print("measurements.shape", measurements.shape)
-        #     error = np.abs(
-        #         (self.experimental_data - measurements))/np.abs(self.experimental_data)
-        #     # error = np.abs(
-        #     #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
-        #     # print("measurements.shape", error.shape)
-        # except (IndexError, ValueError):
-        #     print("Error in measurement")
-        #     error = np.array([1000]*len(self.experimental_data))
-        #     # error = np.array([1000]*len(self.experimental_data[1:-2]))
-        # error =list(range(1,8))
-        params.measurements_error = error
-        params.total_indivedual_error = sum(list(error))
-        # print(error)
-        # self.model.setCellParams(params)
-        # # getting measurement of model after parameter modification to be evaluated
-        # measurements = self.model.get_AP_measurements()
-        # print(measurements.shape)
-        # error = np.abs(
-        #     (self.experimental_data[1:-2] - measurements))/np.abs(self.experimental_data[1:-2])
-
-        return list(error)
-
-    def optimize(self, population_size=10, offspring_size=10, n_generations=100, plot=False):
-        # Population size
-        POP_SIZE = population_size
-        # Number of offspring in every generation
-        OFFSPRING_SIZE = offspring_size
-
-        # Number of generations
-        NGEN = n_generations
+    
+    def optimize(self, save_last=False, plot=False):
 
         # The parent and offspring population size are set the same
-        MU = OFFSPRING_SIZE
-        LAMBDA = OFFSPRING_SIZE
+        MU = self.offspring_size
+        LAMBDA = self.offspring_size
         # ALPHA = POP_SIZE
 
         # Crossover probability
-        CXPB = 0.7
+        CXPB = 1 - self.mutation_probability
         # Mutation probability, should sum to one together with CXPB
-        MUTPB = 0.3
+        MUTPB = self.mutation_probability
 
         # Eta parameter of cx and mut operators
         ETA = 10.0
-        SELECTOR = "NSGA2"
+        IND_SIZE = len(self.parameters_info)
 
-        IND_SIZE = len(self.parameters_boundaries[:, 0][0:6])
-
-        # LOWER = [0.0]
-        # UPPER = [1.0]
-        LOWER = list(self.parameters_boundaries[:, 0][0:6])
-        UPPER = list(self.parameters_boundaries[:, 1][0:6])
+        LOWER = [float(param["low"]) for param in self.parameters_info]
+        UPPER = [float(param["high"]) for param in self.parameters_info]
         OBJ_SIZE = len(self.experimental_data)
-        weights = [-1.0] * OBJ_SIZE
-        # weights[0] = -2.0
+        # weights = [-1.0] * OBJ_SIZE
+        weights = [-1.0*objective["weight"]
+                   for objective in self.experimental_data.values()]
         creator.create("Fitness", base.Fitness, weights=weights)
         creator.create("Individual", Individual, fitness=creator.Fitness)
 
@@ -183,8 +156,7 @@ class Nsga2Optimizer:
             deap.tools.initRepeat,
             list,
             self.toolbox.Individual)
-
-        self.toolbox.register("evaluate", self.ErrorVectorNonPassive)
+        self.toolbox.register("evaluate", self.evaluate)
 
         self.toolbox.register(
             "mate",
@@ -198,19 +170,12 @@ class Nsga2Optimizer:
         self.toolbox.register("variate", deap.algorithms.varAnd)
 
         if not plot:
-            # self.toolbox.register(
-            #     "select",
-            #     tools.selNSGA2)
             self.toolbox.register(
                 "select",
                 tools.selNSGA2)
         else:
-            # self.toolbox.register(
-            #     "select",
-            #     plot_selector, selector=tools.selNSGA2)
             self.toolbox.register(
-                "select",
-                plot_selector, selector=tools.selNSGA2)
+                "select",selector=tools.selNSGA2)
 
         pop = self.toolbox.population(n=MU)
 
@@ -221,34 +186,19 @@ class Nsga2Optimizer:
         # fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
         # sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
         # seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
-        # # eighth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
-        # stats = tools.MultiStatistics(APHeight=first_stats, APWidth=second_stats, AHPDepth=third_stats, AHPDuration=fourth_stats,
-        #                               AHPHalfDuration=fifth_stats, AHPHalfDecay=sixth_stats, AHPRisingTime=seventh_stats)
-        print(list(range(OBJ_SIZE)))
+        # stats = tools.MultiStatistics(Spikecount=first_stats, time_to_first_spike=second_stats, AP_amplitude=third_stats, AP_height=fourth_stats,
+        #                               APWidth=fifth_stats, AHP_depth_abs=sixth_stats, AHP_time_from_peak=seventh_stats)
 
-        # print(stats_list)
-        first_stats = tools.Statistics(key=lambda ind: ind.fitness.values[0])
-        second_stats = tools.Statistics(key=lambda ind: ind.fitness.values[1])
-        third_stats = tools.Statistics(key=lambda ind: ind.fitness.values[2])
-        fourth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[3])
-        fifth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[4])
-        sixth_stats = tools.Statistics(key=lambda ind: ind.fitness.values[5])
-        seventh_stats = tools.Statistics(key=lambda ind: ind.fitness.values[6])
-
-        # stats_list = [tools.Statistics(key=lambda ind: ind.fitness.values[i]) for i in range(OBJ_SIZE)]
-        # stats_dict = dict(zip(self.model.EXPRIMENTAL_DATA[:,0],stats_list))
-        # stats = tools.MultiStatistics(**stats_dict)
+        stats_list = [tools.Statistics(
+            key=lambda ind: ind.fitness.values[i]) for i in range(OBJ_SIZE)]
+        stats_dict = dict(zip(list(self.experimental_data.keys()), stats_list))
+        stats = tools.MultiStatistics(**stats_dict)
 
         # print(stats_dict)
-        # print(stats_dict)
-        stats = tools.MultiStatistics(Spikecount=first_stats, time_to_first_spike=second_stats, AP_amplitude=third_stats, AP_height=fourth_stats,
-                                      APWidth=fifth_stats, AHP_depth_abs=sixth_stats, AHP_time_from_peak=seventh_stats)
+
         stats.register("min_error", np.min, axis=0)
-
-        # stats = deap.tools.Statistics(key=lambda ind: ind.fitness.values[0])
         # stats.register("avg", np.mean)
         # stats.register("std", np.std)
-        # stats.register("min", np.min)
         # stats.register("max", np.max)
         pop, logbook = algorithms.eaMuPlusLambda(
             pop,
@@ -257,12 +207,20 @@ class Nsga2Optimizer:
             LAMBDA,
             CXPB,
             MUTPB,
-            NGEN,
+            self.N_generations,
             stats,
-            halloffame=None)
+            halloffame=None,verbose=False,callbacks=[gen])
+        if save_last:
+            with open("last_generation_pop.obj", "wb") as gen_file:
+                pickle.dump(pop, gen_file)
+            with open("last_generation_logStats.obj", "wb") as logbook_file:
+                pickle.dump(logbook, logbook_file)
+
         self.pop, self.logbook = pop, logbook
         return pop, logbook
 
+def gen(generation=None):
+    print(generation)
 
 class Individual(list):
     def __init__(self, *args):
@@ -284,29 +242,50 @@ def uniform(lower_list, upper_list, dimensions):
 
 
 if __name__ == '__main__':
-    cell_model = FiveCompModel()
 
     print("start Time =",  datetime.now().strftime("%H:%M:%S"))
-    optimizer = Nsga2Optimizer(cell_model)
-    # optimizer.model.setCellParams([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655])
-    # #getting measurement of model after parameter modification to be evaluated
-    # measurements = optimizer.model.get_AP_measurements()
-    # print(optimizer.ErrorVectorNonPassive([0.3948756129235549, 0.9619749870565372, 0.17395335917101354, 0.12632951986691587, 0.6289123625480996, 0.5056621656768967, 0.02153343813138551, 0.8726109184518372, 1.3762639508579921, 0.018678269380864344, 0.09425770246331389, 0.3549523492569816, 0.5358401544817353, 0.5594844045368456, 0.34114602413479655]))
-    pop, logbook = optimizer.optimize(
-        population_size=150, offspring_size=150, n_generations=60)
+    optimizer = Nsga2Optimizer()
+    config = {
+        "Optimizer": {"Random Seed": 1, "Population Size": 2, "Number of Generations": 20,
+                      "Offspring Size": 2, "Mutation Probability": 0.3},
+        # ---------------------------------------------------------------------------- #
+        "stimulation_protocol": {"Protocol Name": "IClamp", "Stimulus Type": "Step", "Amplitude": 21, "Delay": 150, "Duration": 1,
+                                 "Stimulus Section": "iseg", "Stimulus Position": 0.5, "Param": "V", "Recording Section": "soma", "Recording Position": 0.5, "Vinit": -65, "T stop": 500},
+        # ---------------------------------------------------------------------------- #
+        "model_meta_data": {"model_type": "Nmodel", "model_file": "5CompMy_temp.hoc", "model_name": "fivecompMy"},
+        # ----------------------------------parameters_info must be list of dicts---------------------------------- #
+        "parameters_info": [ {"location": "soma", "name":"gnabar_NafSmb1","value":0.0,"low":0.0,"high":1.0},
+        {"location": "soma", "name":"gkdrbar_KdrSmb1","value":0.0,"low":0.0,"high":1.0},
+        {"location": "soma", "name":"gcanbar_CaSmb1","value":0.0,"low":0.0,"high":1.0} 
+                            ],
+        # ---------------------------------experimental_data must be OrderedDict-------------------------------------- #
+        "experimental_data":OrderedDict ({"AP Height":{"weight":1.0,"mean":80.5,"std":None},
+                              "AP Width":{"weight":1.0,"mean":0.8,"std":None}  
+                            })
+
+    }
+    import threading
+    optimizer.setup(config)
+    t1 = threading.Thread(target=optimizer.optimize, args=())
+    # pop, logbook = optimizer.optimize(plot=False)
+    t1.start()
+    for i in range(50):
+        print("x"*i)
+    t1.join()
+    
     # print(pop)
     # print(logbook)
-    i = 0
-    pop.sort(key=lambda ind: ind.total_indivedual_error)
-    for ind in pop:
-        print(ind)
-        print(f"individual {i} Total error =  {ind.total_indivedual_error}")
-        i += 1
-        # print(ind.total_indivedual_error)
-    errors = map(lambda ind: ind.total_indivedual_error, pop)
-    best_sol_idx = np.argmin(errors)
-    print("best solution is   ", pop[best_sol_idx], )
-    print("with errors :   ", list(
-        map(lambda ind: ind.measurements_error, pop))[best_sol_idx], )
-    print(f"with total error {list(errors)[best_sol_idx]}")
+    # i = 0
+    # pop.sort(key=lambda ind: ind.total_indivedual_error)
+    # for ind in pop:
+    #     print(ind)
+    #     print(f"individual {i} Total error =  {ind.total_indivedual_error}")
+    #     i += 1
+    #     # print(ind.total_indivedual_error)
+    # errors = map(lambda ind: ind.total_indivedual_error, pop)
+    # best_sol_idx = np.argmin(errors)
+    # print("best solution is   ", pop[best_sol_idx], )
+    # print("with errors :   ", list(
+    #     map(lambda ind: ind.measurements_error, pop))[best_sol_idx], )
+    # print(f"with total error {list(errors)[best_sol_idx]}")
     # print("end Time =",  datetime.now().strftime("%H:%M:%S"))

@@ -17,14 +17,19 @@ class Model(abc.ABC):
 
     def __init__(self, model_file: str):
         self.model_parameters = None
-        self.setup(model_file)
+        
 
     @abc.abstractmethod
-    def setup(self, model_file: str, model_name: str = None):
+    def _setup(self, model_file: str, model_name: str = None):
         pass
 
     @abc.abstractmethod
     def get_model_parameters(self, printing=PRINTING):
+        pass
+
+
+    @abc.abstractmethod
+    def stimulateCell(self, clampAmp, duration, delay, Tstop,stimSeg,recordSec="soma", clampAt=0.5,recordAt =0.5 , init=-65):
         pass
 
 

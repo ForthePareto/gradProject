@@ -39,13 +39,15 @@ class FiveCompModel():
              ])
         self.EXPRIMENTAL_DATA = np.array(
             [ 
-                  ["Spikecount", 1],
+                ["Spikecount", 1],
                 ["time_to_first_spike", 150+1.2],
                 ["AP_amplitude", 80.414],
                 ["AP_height", 14.527],
                 ['AP_width', 0.8],
                 ["AHP_depth_abs", -70.288],
                 ["AHP_time_from_peak", 16.3],
+                ["steady_state_voltage_stimend",-65.88],
+                ["voltage_base",-65.88]
              ])
         self.measurements = np.zeros(len(self.EXPRIMENTAL_DATA))
 
@@ -736,13 +738,23 @@ class FiveCompModel():
         self.model.dendrites[2].g_pas = self.g_pas / 48.9  # 1/11000
 
     def setNonPassiveParams(self, params: list):
-
+        #7*[0,1] 
+        # print(len(params))
+        # print(params)
         self.model.soma.gnabar_NafSmb1,\
-            self.model.soma.gkdrbar_KdrSmb1,\
-            self.model.soma.gkcabar_CaSmb1,\
-            self.model.soma.gcanbar_CaSmb1,\
-            self.model.soma.gcalbar_CaSmb1,\
-            self.model.soma.ghbar_hb1 = tuple(params[0:6])
+        self.model.soma.gkdrbar_KdrSmb1,\
+        self.model.soma.gkcabar_CaSmb1,\
+        self.model.soma.gcanbar_CaSmb1,\
+        self.model.soma.gcalbar_CaSmb1,\
+        self.model.soma.ghbar_hb1,\
+        self.model.iseg.ghbar_hb1,\
+        self.model.iseg.gnabar_NafIsb1,\
+        self.model.iseg.gnapbar_NapIsb1,\
+        self.model.iseg.gkbar_KdrIsb1,\
+        self.model.dendrites[0].ghbar_hb1,\
+        self.model.dendrites[1].ghbar_hb1,\
+        self.model.dendrites[1].gcaLlvabar_Llvab1,\
+        self.model.dendrites[2].ghbar_hb1= tuple(params)
 
     def setSomaParams(self, params: list):
         # self.model.soma.g_pas, self.model.soma.gnabar_NafSmb1, self.model.soma.gkdrbar_KdrSmb1, self.model.soma.gkcabar_CaSmb1, self.model.soma.gcanbar_CaSmb1, self.model.soma.gcalbar_CaSmb1, \
@@ -913,9 +925,10 @@ class FiveCompModel():
 
     def get_parameters_boundaries(self):
         # boundaries = np.array([[0, 1]]*6)
-        # boundaries = np.array([[0, 1]]*12)
-        boundaries = np.concatenate(
-            (np.array([[0, 1]]*8), np.array([[0, 1.7]]), np.array([[0, 1]]*6)))
+        boundaries = np.array([[0, 1]]*14)
+        boundaries[7,:] =[0,1.8 ]
+        # boundaries = np.concatenate(
+        #     (np.array([[0, 1]]*8), np.array([[0, 1.7]]), np.array([[0, 1]]*6)))
         return boundaries
 
     def get_measurements(self, delay=150, duration=1, current=21):
@@ -1166,7 +1179,9 @@ if __name__ == '__main__':
     # model.setNonPassiveParams([0.7157734280535681, 0.0783158275088403, 0.037849066079255686, 0.20186479394872267, 0.042968980382427205, 0.43630327285909665])
     # model.setNonPassiveParams([0.6398347  ,0.02779268, 0.30952212, 0.8451458  ,0.02870856, 0.21565166])
     # model.setNonPassiveParams([0.9590376504645156, 0.952118010131992, 0.07396540874186228, 0.04368507118383386, 0.16389790666841986, 0.05326181544291657]) #best so far, one spike
-    model.setNonPassiveParams([0.6613219836445203, 0.32438396146692794, 0.056964446293991555, 0.9484563056781417, 0.09954394476944614, 0.2350525460904171])
+    # model.setNonPassiveParams([0.6613219836445203, 0.32438396146692794, 0.056964446293991555, 0.9484563056781417, 0.09954394476944614, 0.2350525460904171])
+    # model.setNonPassiveParams([0.7600865047115988, 0.13645522566068502, 0.058385241828436435, 0.6745840079987664, 0.07667645920525748, 0.1074941291060929, 0.2257093386078547, 0.7116756721891143, 0.12989633280026444, 0.6944878113542041, 0.19704438904435354, 0.9740521211821568, 0.5675507204350875, 0.20917651755473282])
+    model.setNonPassiveParams([0.9752453745752709, 0.6506615354191387, 0.05889412575242892, 0.9858383398714384, 0.05858435463387173, 0.062613100534031, 0.21856870146812502, 0.7664172540476241, 0.03785699665990144, 0.012555980159115854, 0.06098226843480789, 0.9891385644880692, 0.5716992468245727, 0.17509904480181376])
     delay = 150
     duration = 1
     current = 21
@@ -1178,7 +1193,7 @@ if __name__ == '__main__':
     # model.print_EFEL_Measurements(['AP_amplitude', 'AP1_amp', "AP_height", 'AP_width', "spike_half_width", 'AHP_depth_abs', "fast_AHP", 'AHP_depth',
     #  "AHP_time_from_peak", "AHP_slow_time", 'decay_time_constant_after_stim', 'ohmic_input_resistance', 'ohmic_input_resistance_vb_ssse'])
     model.print_EFEL_Measurements(
-        ["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak"])
+        ["Spikecount","time_to_first_spike","AP_amplitude","AP_height",'AP_width','AHP_depth_abs',"AHP_time_from_peak","steady_state_voltage_stimend","voltage_base"])
     # model.EXPRIMENTAL_DATA = np.array(
     #     [["AP_amplitude", 80.414],
     #      ["AP_height", 14.527],

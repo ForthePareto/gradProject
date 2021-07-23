@@ -6,6 +6,7 @@ import math
 from collections import OrderedDict
 from enum import Enum
 import warnings
+from Model import Model
 class Level(Enum):
     HIGH = 0.5
     MID = 5.0
@@ -29,18 +30,19 @@ def _zero_valued_dict(keys):
 
 
 class EfelMeasurements():
-    def __init__(self, model, config):
+    def __init__(self, model:Model , config: dict):
 
         self.cell = model
         self.voltage = None
         self.t = None
         self.delay = None
         self.duration = None
+        self.current_amplitude = None
         self.Tstop = None
         self.trace = {}
         self._setup(config)
 
-    def setup(self, config):
+    def _setup(self, config):
         self.voltage, self.t = self.cell.stimulateCell(
             float(config["Amplitude"]), float(
                 config["Duration"]), float(config["Delay"]),
@@ -50,13 +52,14 @@ class EfelMeasurements():
         self.delay = float(config["Delay"])
         self.duration = float(config["Duration"])
         self.Tstop = float(config["T stop"])
+        self.current_amplitude = float(config["Amplitude"])
         self._initialize()
 
     def _initialize(self):
         # start =  sorted(self._closeMatches(self.t,delay,0.025),key=lambda x: x[0])[0][0]
         # end =  sorted(self._closeMatches(self.t,delay+duration,0.025),key=lambda x: x[0])[0][0]
         # print(t[2]-t[1])
-        efel.setDoubleSetting('stimulus_current', current)
+        efel.setDoubleSetting('stimulus_current', self.current_amplitude)
         efel.setIntSetting("strict_stiminterval", True)
         self.trace['T'] = self.t
         self.trace['V'] = self.voltage

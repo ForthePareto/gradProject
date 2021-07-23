@@ -12,6 +12,7 @@ PRINTING = False
 class NrnModel(Model):
     GLOBAL_PARAMS = [""]  #i.e accessed by h.param
     def __init__(self, model_file: str, model_name: str):
+        Model.__init__(self,model_file)
         if model_name is None:
             raise ValueError(
                 "You Must give the model name in the Nmodel template")
@@ -178,14 +179,14 @@ class NrnModel(Model):
         value : float
             [description]
         """
-        section = self.get_section(section_name)
+        section = self.get_compartement(section_name)
         if section_name == "GLOBAL" :
             #example h.th_NafSmb1
-            parameter = getattr(h,parameter_name)
-            parameter = value
+            setattr(h,parameter_name,value)
+            
         else:
-            parameter = getattr(section,parameter_name)
-            parameter = value
+            setattr(section,parameter_name,value)
+            
 
 
     def _get_model_name(self) -> str:
@@ -193,6 +194,7 @@ class NrnModel(Model):
 
     def setIClamp(self, delay, duration, amp, segment, position):
         """Add a current clamp at {position} of {segment}"""
+       
         stim = h.IClamp(segment(position))
         stim.delay = delay           # ms
         stim.dur = duration        # ms
@@ -212,8 +214,8 @@ class NrnModel(Model):
         h.finitialize(init * mV)
         h.continuerun(TStop * ms)
         # print(list(self.soma_v))
-
-    def stimulateCell(self, clampAmp, duration, delay, Tstop,stimSeg,recordSec, clampAt=0.5,recordAt =0.5 , init=-65):
+    
+    def stimulateCell(self, clampAmp, duration, delay, Tstop,stimSeg,recordSec="soma", clampAt=0.5,recordAt =0.5 , init=-65):
         """ Stimulate the cell with the supplied properties
             Args:
             :param clampAmp: the current value at which the cell is stimulated (in nA)
@@ -228,28 +230,33 @@ class NrnModel(Model):
         :return t: the recorded time vector
 
          """
+        
         stim = self.setIClamp(delay, duration, clampAmp,
                               segment=self.get_compartement(stimSeg), position=clampAt)
         volt, t = self.recordVolt(self.get_compartement(recordSec), recordAt)
         self.runControler(TStop=Tstop, init=-65)
-
         return volt, t
 
     def __repr__(self):
         return f"Model  {self.model_name} with Kinetecs \n {list(self.get_all_compartments().keys())} \n  \n And  with parameters: \n {self.get_model_parameters()}  "
-
+    def set_test(self):
+        section = self.get_compartement("soma")
+        print(section)
+        setattr(section,"g_pas",0.005)
+        print(section.g_pas)
 
 if __name__ == '__main__':
     from hoc2swc import hoc2swc
 
     # hoc2swc("5CompMy_temp.hoc", "out.swc")
     model = NrnModel("5CompMy_temp.hoc", "fivecompMy")
+    print(model.get_compartement("soma"))
     # model.get_model_parameters()
     # model.get_compartments_channels(printing=False)
     # print(model.get_model_parameters(printing=False)[
     #       "fivecompMy[0].soma"]["morphology"]['diam'][0])
     pp = pprint.PrettyPrinter()
-    pp.pprint(model)
+    # pp.pprint(model)
     # print(model.get_compartement("soma"))
     # pp = pprint.PrettyPrinter()
     # for seg in model.compartments_list[0]:

@@ -37,6 +37,9 @@ def uniform(lower_list, upper_list, dimensions):
         return [np.random.uniform(lower_list, upper_list)
                 for _ in range(dimensions)]
 
+def check_invalid(individual:list):
+    return  all(v == 0 for v in individual)
+
 
 def ErrorVectorNonPassive(params):
     """Cost using euclidean distance, parameter set are fed to the Cellmodel then cell measurments are done to be compared with model exprimental measurements.
@@ -46,15 +49,19 @@ def ErrorVectorNonPassive(params):
     model.setNonPassiveParams(params)
     # getting measurement of model after parameter modification to be evaluated
     measurements = model.get_EFEL_measurements(
-        ["Spikecount", "time_to_first_spike", "AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak"])
+        ["Spikecount", "time_to_first_spike", "AP_amplitude", "AP_height", 'AP_width', 'AHP_depth_abs', "AHP_time_from_peak","steady_state_voltage_stimend","voltage_base"])
     # self.model.model.graphVolt(self.model.volt, self.model.t, "trace").show()
-
+    
     params.measurements = measurements
     # print("measurements.shape", measurements.shape)
     experimental_data = np.copy(model.get_exprimental_data())  # done
     # parameters_boundaries = np.copy(model.get_parameters_boundaries())  # done
-    error = np.abs(
-        (experimental_data - measurements))/np.abs(experimental_data)
+    # if check_invalid(measurements) ==True :
+    if 1==0 :
+        error = [250]*len(measurements)
+    else: 
+        error = np.abs(
+            (experimental_data - measurements))/np.abs(experimental_data)
 
     params.measurements_error = error
     params.total_indivedual_error = sum(list(error))
@@ -70,12 +77,12 @@ best_solution = None
 best_score = None
 
 
-POP_SIZE = 100
+POP_SIZE = 120
 # Number of offspring in every generation
-OFFSPRING_SIZE = 100
+OFFSPRING_SIZE = 120
 
 # Number of generations
-NGEN = 20
+NGEN = 500
 
 # The parent and offspring population size are set the same
 MU = OFFSPRING_SIZE
@@ -90,9 +97,9 @@ MUTPB = 0.3
 # Eta parameter of cx and mut operators
 ETA = 10.0
 
-IND_SIZE = len(parameters_boundaries[:, 0][0:6])
-LOWER = list(parameters_boundaries[:, 0][0:6])
-UPPER = list(parameters_boundaries[:, 1][0:6])
+IND_SIZE = len(parameters_boundaries[:, 0])
+LOWER = list(parameters_boundaries[:, 0])
+UPPER = list(parameters_boundaries[:, 1])
 OBJ_SIZE = len(experimental_data)
 weights = [-1.0] * OBJ_SIZE
 # weights[0] = -2.0
@@ -124,7 +131,7 @@ toolbox.register("mutate", deap.tools.mutPolynomialBounded, eta=ETA,
 
 toolbox.register("variate", deap.algorithms.varAnd)
 toolbox.register("map", futures.map)
-hof = tools.HallOfFame(3)
+# hof = tools.HallOfFame(3)
 # pool = multiprocessing.Pool()
 # toolbox.register("map", pool.map)
 plot = False
@@ -191,10 +198,10 @@ def parallel_Nsga2():
         LAMBDA,
         CXPB,
         MUTPB,
-        # NGEN,
-        6,
-        stats,
-        halloffame=hof)
+        NGEN,
+        # 6,
+        stats,verbose=True)
+        # halloffame=hof)
 
     # optimizer = Nsga2Optimizer(cell_model)
     # pop, logbook = optimizer.optimize(
@@ -252,17 +259,17 @@ def parallel_Nsga2():
     #     print("with error =  ", error )
     #     print("and total error =  ", sum(error))
 
-    # pop.sort(key=lambda ind: sum(ErrorVectorNonPassive(ind)))
-    # # pop = sorted(pop,key=lambda ind: ind.total_indivedual_error)
-    # print("@@@@@@@@@@@@@@@@@@@@@")
-    # i = 0
-    # for ind in pop:
-    #     print(ind)
-    #     error = ErrorVectorNonPassive(ind)
-    #     print(f"individual {i}   error is {error} " )
-    #     print(f"and Total error =  {sum(error)}")
-    #     i+=1
-    #     print("########################")
+    pop.sort(key=lambda ind: sum(ErrorVectorNonPassive(ind)))
+    # pop = sorted(pop,key=lambda ind: ind.total_indivedual_error)
+    print("@@@@@@@@@@@@@@@@@@@@@")
+    i = 0
+    for ind in pop:
+        print(ind)
+        error = ErrorVectorNonPassive(ind)
+        print(f"individual {i}   error is {error} " )
+        print(f"and Total error =  {sum(error)}")
+        i+=1
+        print("########################")
     # print(ind.total_indivedual_error)
     # errors = map(lambda ind: ind.total_indivedual_error, pop)
     # best_sol_idx = np.argmin(errors)
@@ -272,4 +279,5 @@ def parallel_Nsga2():
 
 
 if __name__ == '__main__':
+    
     parallel_Nsga2()

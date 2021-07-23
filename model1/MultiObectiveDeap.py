@@ -123,12 +123,12 @@ class Nsga2Optimizer:
         ETA = 10.0
         SELECTOR = "NSGA2"
 
-        IND_SIZE = len(self.parameters_boundaries[:, 0][0:6])
+        IND_SIZE = len(self.parameters_boundaries[:, 0])
 
         # LOWER = [0.0]
         # UPPER = [1.0]
-        LOWER = list(self.parameters_boundaries[:, 0][0:6])
-        UPPER = list(self.parameters_boundaries[:, 1][0:6])
+        LOWER = list(self.parameters_boundaries[:, 0])
+        UPPER = list(self.parameters_boundaries[:, 1])
         OBJ_SIZE = len(self.experimental_data)
         weights = [-1.0]* OBJ_SIZE
         # weights[0] = -2.0
