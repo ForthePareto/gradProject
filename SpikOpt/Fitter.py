@@ -57,7 +57,9 @@ class Fitter:
             raise ValueError("Experimental data is not provided")
 
         optimizer.setup(config)
-        optimizer.optimize()
+        pop,logbook = optimizer.optimize()
+        self.best_params , self.best_errors = self.optimizer.get_results(pop)
+        return self.best_params , self.best_errors
 
 
 if __name__ == '__main__':

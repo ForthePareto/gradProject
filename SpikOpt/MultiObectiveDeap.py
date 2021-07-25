@@ -250,10 +250,12 @@ class Nsga2Optimizer:
         print(self.best_solution_errors)
         return self.best_solution , self.best_solution_errors
     def plot_convergence(self):
-        pass
+            plt.plot(mins,color="red",label ="population minimum")
+
 
 def gen(generation=None):
     print(generation)
+    
 
 
 class Individual(list):
