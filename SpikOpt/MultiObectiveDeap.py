@@ -233,7 +233,7 @@ class Nsga2Optimizer:
             i += 1
             print("########################")
 
-        self.get_results(pop)
+        # self.get_results(pop)
         
         return pop, logbook
 
@@ -249,8 +249,10 @@ class Nsga2Optimizer:
         self.best_solution_errors.append(self.total_error)
         print(self.best_solution_errors)
         return self.best_solution , self.best_solution_errors
-    def plot_convergence(self):
-            plt.plot(mins,color="red",label ="population minimum")
+
+
+    # def plot_convergence(self):
+    #         plt.plot(mins,color="red",label ="population minimum")
 
 
 def gen(generation=None):

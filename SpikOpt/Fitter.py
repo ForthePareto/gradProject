@@ -58,7 +58,7 @@ class Fitter:
 
         optimizer.setup(config)
         pop,logbook = optimizer.optimize()
-        self.best_params , self.best_errors = self.optimizer.get_results(pop)
+        self.best_params , self.best_errors = optimizer.get_results(pop)
         return self.best_params , self.best_errors
 
 
