@@ -10,6 +10,7 @@ from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
+from algorithms import eaMuPlusLambda
 import pickle
 from Simulator import Simulator
 np.random.seed(1)
@@ -202,7 +203,7 @@ class Nsga2Optimizer:
         # stats.register("avg", np.mean)
         # stats.register("std", np.std)
         # stats.register("max", np.max)
-        pop, logbook = algorithms.eaMuPlusLambda(
+        pop, logbook = eaMuPlusLambda(
             pop,
             self.toolbox,
             MU,
@@ -245,8 +246,11 @@ class Nsga2Optimizer:
         self.best_solution_errors = [  [objective, str(round(best_solution_errors[i],5))] for i,objective in enumerate(self.experimental_data.keys()) ]
 
         self.total_error = [ "Total Error", str(round(sum(best_solution_errors),5))  ]
-        # self.best_score  = sum(self.best_solution_errors)
-
+        self.best_solution_errors.append(self.total_error)
+        print(self.best_solution_errors)
+        return self.best_solution , self.best_solution_errors
+    def plot_convergence(self):
+        pass
 
 def gen(generation=None):
     print(generation)
