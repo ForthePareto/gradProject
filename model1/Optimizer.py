@@ -90,4 +90,5 @@ if __name__ == '__main__':
     # cell_model.get_measurements()
     optimizer = ModelOptimizer(cell_model)
     optimizer.optimize()
+    
    

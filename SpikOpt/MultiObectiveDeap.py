@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +13,6 @@ from deap import algorithms
 import pickle
 from Simulator import Simulator
 np.random.seed(1)
-from copy import deepcopy
 N = 0
 
 
@@ -59,7 +59,6 @@ class Nsga2Optimizer:
                          config.get("experimental_data", None))
         self.simulator = Simulator(
             self.model_meta_data["model_type"], self.model_meta_data["model_file"], self.model_meta_data["model_name"])
-        
 
     def _set_Nsga_config(self, config):
         self.N_generations = config.get(
@@ -73,23 +72,23 @@ class Nsga2Optimizer:
         self.crossover_probability = 1 - self.mutation_probability
         self.random_seed = config.get(
             'Random Seed', Nsga2Optimizer.SEED)
+
     def _set_config(self, config_name: str, config):
-        
-        CONFIGs_Structure_types = {"Optimizer":dict,"stimulation_protocol":dict,"model_meta_data":dict
-                ,"parameters_info":list,"experimental_data":OrderedDict}
+
+        CONFIGs_Structure_types = {"Optimizer": dict, "stimulation_protocol": dict,
+                                   "model_meta_data": dict, "parameters_info": list, "experimental_data": OrderedDict}
         # print(config)
-        if (config is None)  :
+        if (config is None):
             raise ValueError(
                 f"{config_name} information must be provided in a {CONFIGs_Structure_types[config_name]} to the configration of the optimizer, so it can be used in every evaluation")
-        else: 
-            setattr(self, config_name,config)  
+        else:
+            setattr(self, config_name, config)
             # if isinstance(config,list):
-            #     getattr(self, config_name) =[val for val in config ] 
-                
+            #     getattr(self, config_name) =[val for val in config ]
+
             # else:
             #     getattr(self, config_name) = deepcopy(config)
-    
-    
+
     def set_random_seed(self, seed: int):
         self.random_seed = seed
 
@@ -116,9 +115,9 @@ class Nsga2Optimizer:
             else:
                 errors.append(abs(self.experimental_data[measurement]["mean"] -
                                   simulator_measurements[measurement])/self.experimental_data[measurement]["mean"])
-        
+
         return errors
-    
+
     def optimize(self, save_last=False, plot=False):
 
         # The parent and offspring population size are set the same
@@ -175,7 +174,7 @@ class Nsga2Optimizer:
                 tools.selNSGA2)
         else:
             self.toolbox.register(
-                "select",selector=tools.selNSGA2)
+                "select", selector=tools.selNSGA2)
 
         pop = self.toolbox.population(n=MU)
 
@@ -191,7 +190,10 @@ class Nsga2Optimizer:
 
         stats_list = [tools.Statistics(
             key=lambda ind: ind.fitness.values[i]) for i in range(OBJ_SIZE)]
+        total_error = tools.Statistics(key=lambda ind: sum(
+            [ind.fitness.values[i] for i in range(OBJ_SIZE)]))
         stats_dict = dict(zip(list(self.experimental_data.keys()), stats_list))
+        stats_dict["Total_error"] = total_error
         stats = tools.MultiStatistics(**stats_dict)
 
         # print(stats_dict)
@@ -209,7 +211,7 @@ class Nsga2Optimizer:
             MUTPB,
             self.N_generations,
             stats,
-            halloffame=None,verbose=False,callbacks=[gen])
+            halloffame=None, verbose=False, callbacks=[gen])
         if save_last:
             with open("last_generation_pop.obj", "wb") as gen_file:
                 pickle.dump(pop, gen_file)
@@ -217,10 +219,38 @@ class Nsga2Optimizer:
                 pickle.dump(logbook, logbook_file)
 
         self.pop, self.logbook = pop, logbook
+
+        pop.sort(key=lambda ind: sum(self.evaluate(ind)))
+        # pop = sorted(pop,key=lambda ind: ind.total_indivedual_error)
+        print("@@@@@@@@@@@@@@@@@@@@@")
+        i = 0
+        for ind in pop:
+            print(ind)
+            error = self.evaluate(ind)
+            print(f"individual {i}   error is {error} ")
+            print(f"and Total error =  {sum(error)}")
+            i += 1
+            print("########################")
+
+        self.get_results(pop)
+        
         return pop, logbook
+
+    def get_results(self, population):
+        best_solution = population[0]
+        self.best_solution = [[param["location"], param["name"], str(
+            best_solution[i])] for i, param in enumerate(self.parameters_info)]
+
+        best_solution_errors = self.evaluate(best_solution)
+        self.best_solution_errors = [  [objective, str(round(best_solution_errors[i],5))] for i,objective in enumerate(self.experimental_data.keys()) ]
+
+        self.total_error = [ "Total Error", str(round(sum(best_solution_errors),5))  ]
+        # self.best_score  = sum(self.best_solution_errors)
+
 
 def gen(generation=None):
     print(generation)
+
 
 class Individual(list):
     def __init__(self, *args):
@@ -246,33 +276,35 @@ if __name__ == '__main__':
     print("start Time =",  datetime.now().strftime("%H:%M:%S"))
     optimizer = Nsga2Optimizer()
     config = {
-        "Optimizer": {"Random Seed": 1, "Population Size": 2, "Number of Generations": 20,
-                      "Offspring Size": 2, "Mutation Probability": 0.3},
+        "Optimizer": {"Random Seed": 1, "Population Size": 3, "Number of Generations": 3,
+                      "Offspring Size": 3, "Mutation Probability": 0.3},
         # ---------------------------------------------------------------------------- #
         "stimulation_protocol": {"Protocol Name": "IClamp", "Stimulus Type": "Step", "Amplitude": 21, "Delay": 150, "Duration": 1,
                                  "Stimulus Section": "iseg", "Stimulus Position": 0.5, "Param": "V", "Recording Section": "soma", "Recording Position": 0.5, "Vinit": -65, "T stop": 500},
         # ---------------------------------------------------------------------------- #
         "model_meta_data": {"model_type": "Nmodel", "model_file": "5CompMy_temp.hoc", "model_name": "fivecompMy"},
         # ----------------------------------parameters_info must be list of dicts---------------------------------- #
-        "parameters_info": [ {"location": "soma", "name":"gnabar_NafSmb1","value":0.0,"low":0.0,"high":1.0},
-        {"location": "soma", "name":"gkdrbar_KdrSmb1","value":0.0,"low":0.0,"high":1.0},
-        {"location": "soma", "name":"gcanbar_CaSmb1","value":0.0,"low":0.0,"high":1.0} 
+        "parameters_info": [{"location": "soma", "name": "gnabar_NafSmb1", "value": 0.0, "low": 0.0, "high": 1.0},
+                            {"location": "soma", "name": "gkdrbar_KdrSmb1",
+                                "value": 0.0, "low": 0.0, "high": 1.0},
+                            {"location": "soma", "name": "gcanbar_CaSmb1",
+                                "value": 0.0, "low": 0.0, "high": 1.0}
                             ],
         # ---------------------------------experimental_data must be OrderedDict-------------------------------------- #
-        "experimental_data":OrderedDict ({"AP Height":{"weight":1.0,"mean":80.5,"std":None},
-                              "AP Width":{"weight":1.0,"mean":0.8,"std":None}  
-                            })
+        "experimental_data": OrderedDict({"AP Height": {"weight": 1.0, "mean": 80.5, "std": None},
+                                          "AP Width": {"weight": 1.0, "mean": 0.8, "std": None}
+                                          })
 
     }
     import threading
     optimizer.setup(config)
-    t1 = threading.Thread(target=optimizer.optimize, args=())
-    # pop, logbook = optimizer.optimize(plot=False)
-    t1.start()
-    for i in range(50):
-        print("x"*i)
-    t1.join()
-    
+    # t1 = threading.Thread(target=optimizer.optimize, args=())
+    pop, logbook = optimizer.optimize(plot=False)
+    # t1.start()
+    # for i in range(50):
+    #     print("x"*i)
+    # t1.join()
+
     # print(pop)
     # print(logbook)
     # i = 0

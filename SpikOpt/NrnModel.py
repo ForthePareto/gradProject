@@ -253,8 +253,8 @@ if __name__ == '__main__':
     print(model.get_compartement("soma"))
     # model.get_model_parameters()
     # model.get_compartments_channels(printing=False)
-    # print(model.get_model_parameters(printing=False)[
-    #       "fivecompMy[0].soma"]["morphology"]['diam'][0])
+    print(model.get_model_parameters(printing=False)[
+          "fivecompMy[0].soma"]["morphology"]['diam'])
     pp = pprint.PrettyPrinter()
     # pp.pprint(model)
     # print(model.get_compartement("soma"))

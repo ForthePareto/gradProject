@@ -25,7 +25,7 @@ class Simulator():
         self.stimulus_protocol = None
         self.requested_measurments = None
 
-    def fetch_model_parameters(self) -> OrderedDict:
+    def fetch_model_parameters(self) -> list:
         return self.model.get_model_parameters()
 
     def fetch_model_channels(self) -> OrderedDict:

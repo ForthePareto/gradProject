@@ -19,8 +19,10 @@ EFEL_NAME_MAP = {
                  "AP Width": "AP_width",
                  "AHP Absolute Depth": "AHP_depth_abs",
                  "AHP time from peak": "AHP_time_from_peak",
-                 "Spikecount": "Spikecount",
+                 "Spike Count": "Spikecount",
                  "Time to First Spike": "time_to_first_spike",
+                 "SS Voltage":"steady_state_voltage_stimend",
+                 "Voltage Base":"voltage_base"
                  }
 EFEL2NAME_MAP = {v: k for k, v in EFEL_NAME_MAP.items()}
 

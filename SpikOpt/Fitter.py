@@ -27,7 +27,7 @@ class Fitter:
         """Initializes the simulator with the given model configuration."""
         self.simulator = Simulator(model_type, model_file, model_name)
 
-    def fetch_model_parameters(self) -> OrderedDict:
+    def fetch_model_parameters(self) -> list:
         """Returns an OrderedDictionary with keys= compartments  name , values= dictionary of each channel and their corresponding parameters as strings
             usually parameters are channel conductances.
         """
@@ -79,10 +79,38 @@ if __name__ == '__main__':
         {"location": "soma", "name":"gcanbar_CaSmb1","value":0.0,"low":0.0,"high":1.0} 
                             ],
         # ---------------------------------experimental_data must be OrderedDict-------------------------------------- #
-        "experimental_data":OrderedDict ({"AP Height":{"weight":1.0,"mean":80.5,"std":None},
+        "experimental_data":OrderedDict ({"Rheobase":{"weight":1.0,"mean": 7.88,"std":None},
                               "AP Width":{"weight":1.0,"mean":0.8,"std":None}  
                             })
 
     }
     fitter.fit(config)
+    # print(len(params))
+    # conductances = []
+    # i=0
+    # for  section in params:
+    #     # print(section[0])
+    #     # print(section[1])
+    #     for mech in section[1]: 
+    #         if mech[0] != "morphology":
+    #             for param in mech[1]:
+    #                 conductances.append([i,section[0].split(".")[-1] , param])
+    #                 i+=1
+        
+    # print(conductances)
+
+    def get_list_of_parameters(params):
+        conductances = []
+        i=0
+        for  section in params:
+            # print(section[0])
+            # print(section[1])
+            for mech in section[1]: 
+                if mech[0] != "morphology":
+                    for param in mech[1]:
+                        conductances.append([i,section[0].split(".")[-1] , param])
+                        i+=1
+        return conductances
     
+
+    print(get_list_of_parameters(params))
