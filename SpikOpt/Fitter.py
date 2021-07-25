@@ -42,7 +42,7 @@ class Fitter:
         return self.simulator.fetch_model_channels()
 
     def fit(self, config: dict, measurer_type: str = "efel", optimizer_type: str = "NSGA2", **kwargs):  # TODO: ask about parallism
-        optimizer = AVAILABE_OPTIMIZERS[optimizer_type]()
+        self.optimizer = AVAILABE_OPTIMIZERS[optimizer_type]()
 
         self.stimulation_protocol = config.get("stimulation_protocol", None)
         """Format:  {"Protocol Name": "IClamp دروب داون", "Stimulus Type":"Step دروب داون" , "Amplitude":"21" ,"Delay":"150", "Duration":"3", 
@@ -56,10 +56,15 @@ class Fitter:
         if self.experimental_data is None:
             raise ValueError("Experimental data is not provided")
 
-        optimizer.setup(config)
-        pop,logbook = optimizer.optimize()
-        self.best_params , self.best_errors = optimizer.get_results(pop)
+        self.optimizer.setup(config)
+        pop,logbook = self.optimizer.optimize()
+        self.best_params , self.best_errors = self.optimizer.get_results(pop)
+        self.optimizer.plot_convergence()
         return self.best_params , self.best_errors
+
+    def save_to_file(self,protocol:dict, results: list,file_name="results.json"):
+        self.optimizer.save_results(protocol,results,file_name)
+
 
 
 if __name__ == '__main__':

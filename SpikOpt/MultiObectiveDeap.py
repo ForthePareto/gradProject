@@ -12,7 +12,10 @@ from deap import tools
 from deap import algorithms
 from algorithms import eaMuPlusLambda
 import pickle
+import json
 from Simulator import Simulator
+plt.style.use('dark_background')
+
 np.random.seed(1)
 N = 0
 
@@ -119,7 +122,7 @@ class Nsga2Optimizer:
 
         return errors
 
-    def optimize(self, save_last=False, plot=False):
+    def optimize(self,callbacks = None ,save_last=False ,plot=False):
 
         # The parent and offspring population size are set the same
         MU = self.offspring_size
@@ -212,7 +215,7 @@ class Nsga2Optimizer:
             MUTPB,
             self.N_generations,
             stats,
-            halloffame=None, verbose=False, callbacks=[gen])
+            halloffame=None, verbose=False, callbacks=callbacks)
         if save_last:
             with open("last_generation_pop.obj", "wb") as gen_file:
                 pickle.dump(pop, gen_file)
@@ -232,7 +235,8 @@ class Nsga2Optimizer:
             print(f"and Total error =  {sum(error)}")
             i += 1
             print("########################")
-
+        self.min_errors_across_gens = logbook.chapters["Total_error"].select("min_error")
+        # self.plot_convergence()
         # self.get_results(pop)
         
         return pop, logbook
@@ -251,8 +255,19 @@ class Nsga2Optimizer:
         return self.best_solution , self.best_solution_errors
 
 
-    # def plot_convergence(self):
-    #         plt.plot(mins,color="red",label ="population minimum")
+    def save_results(self,protocol:dict, results: list,file_name="results.json"):
+        a_file = open("results.json", "w")
+        json.dump(protocol, a_file)
+        a_file.write("\n\n")
+        json.dump(results, a_file)
+        a_file.close()
+
+    def plot_convergence(self):
+        plt.plot(self.min_errors_across_gens,color="red",label ="population minimum")
+        plt.xlabel('# Generations')
+        plt.ylabel('Total Error')
+        plt.legend()
+        plt.savefig("convergance.png")
 
 
 def gen(generation=None):
@@ -284,8 +299,8 @@ if __name__ == '__main__':
     print("start Time =",  datetime.now().strftime("%H:%M:%S"))
     optimizer = Nsga2Optimizer()
     config = {
-        "Optimizer": {"Random Seed": 1, "Population Size": 3, "Number of Generations": 3,
-                      "Offspring Size": 3, "Mutation Probability": 0.3},
+        "Optimizer": {"Random Seed": 1, "Population Size": 4, "Number of Generations": 3,
+                      "Offspring Size": 4, "Mutation Probability": 0.3},
         # ---------------------------------------------------------------------------- #
         "stimulation_protocol": {"Protocol Name": "IClamp", "Stimulus Type": "Step", "Amplitude": 21, "Delay": 150, "Duration": 1,
                                  "Stimulus Section": "iseg", "Stimulus Position": 0.5, "Param": "V", "Recording Section": "soma", "Recording Position": 0.5, "Vinit": -65, "T stop": 500},
@@ -308,6 +323,8 @@ if __name__ == '__main__':
     optimizer.setup(config)
     # t1 = threading.Thread(target=optimizer.optimize, args=())
     pop, logbook = optimizer.optimize(plot=False)
+    parameters, _  =optimizer.get_results(pop)
+    optimizer.save_results(optimizer.stimulation_protocol,parameters )
     # t1.start()
     # for i in range(50):
     #     print("x"*i)

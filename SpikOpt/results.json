@@ -1,0 +1,3 @@
+{"Protocol Name": "IClamp", "Stimulus Type": "Step", "Amplitude": 21, "Delay": 150, "Duration": 1, "Stimulus Section": "iseg", "Stimulus Position": 0.5, "Param": "V", "Recording Section": "soma", "Recording Position": 0.5, "Vinit": -65, "T stop": 500}
+
+[["soma", "gnabar_NafSmb1", "0.41877236869417866"], ["soma", "gkdrbar_KdrSmb1", "0.34480020392194966"], ["soma", "gcanbar_CaSmb1", "0.00011437481734488664"]]
